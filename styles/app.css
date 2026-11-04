@@ -243,8 +243,25 @@ td strong { color: var(--app-text); }
 .import-counts strong { display: block; margin-top: .15rem; color: var(--app-text); font-size: 1.1rem; }
 .import-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .75rem; }
 .import-actions .nav-button { display: inline-flex; align-items: center; }
+.mapping-region { margin-top: 1rem; padding: .85rem; border: 1px solid var(--app-border); background: var(--app-bg); }
+.mapping-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.mapping-heading h3, .mapping-preview h4 { margin: 0; color: var(--app-text); font-size: .84rem; }
+.mapping-heading p { margin: .3rem 0 0; }
+.source-columns { display: flex; flex-wrap: wrap; gap: .35rem; margin: .7rem 0; }
+.source-columns span { padding: .3rem .45rem; border: 1px solid var(--app-border); color: var(--app-muted); font-size: .64rem; overflow-wrap: anywhere; }
+.mapping-table-wrap, .preview-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--app-border); }
+.mapping-table { min-width: 600px; }
+.mapping-table th[scope="row"] { position: static; background: transparent; color: var(--app-text); text-transform: none; letter-spacing: normal; font-size: .7rem; }
+.mapping-table td, .mapping-table th { vertical-align: middle; }
+.mapping-table select { min-width: 220px; }
+.required-field { color: var(--app-accent); font-weight: 700; }
+.optional-field { color: var(--app-faint); }
+.mapping-preview { margin-top: .8rem; }
+.mapping-preview h4 { margin-bottom: .45rem; }
+.preview-table-wrap table { min-width: 760px; }
+.preview-table-wrap tbody tr { cursor: default; }
+.preview-table-wrap tbody tr:hover { background: transparent; box-shadow: none; }
 .compact-inventory td { padding-top: .38rem; padding-bottom: .38rem; }
 .compact-inventory .panel-header { min-height: 52px; padding-top: .55rem; padding-bottom: .55rem; }
 @media (max-width: 760px) { .settings-page { width: min(100% - 1rem,1120px); padding-top: .75rem; } .cfg-grid, .logo-tools, .help-layout { grid-template-columns: 1fr; } .help-nav { position: static; } .settings-surface { padding: .65rem; } .config-list { grid-template-columns: 1fr; } .config-list dd { margin-bottom: .35rem; } }
-@media (max-width: 480px) { .settings-tabs { padding: 0; } .settings-actions { flex-wrap: wrap; } .settings-actions p { width: 100%; } }
-; } }
+@media (max-width: 480px) { .settings-tabs { padding: 0; } .settings-actions, .mapping-heading { flex-wrap: wrap; } .settings-actions p { width: 100%; } .mapping-heading .btn { width: 100%; } }

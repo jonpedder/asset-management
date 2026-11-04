@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractCsvRecords, parseCsv } from "../src/csv.js";
+import { extractCsvRecords, inspectCsv, mapCsvRecords, parseCsv } from "../src/csv.js";
 
 const headers = "Asset Type,Dept,Category,Est. Qty,Availability,EOC Role / Use,Operator Required?,Status,Gap Description,Procurement Priority,Est. Unit Cost,Notes / Source";
 
@@ -26,6 +26,36 @@ test("extractor preserves the 32-row customer draft behavior", () => {
   assert.equal(result.records.length, 32);
   assert.equal(result.headerRow, 4);
   assert.ok(result.ignoredRows >= 5);
+});
+
+test("automatic mapping uses exact normalized aliases for documented headings", () => {
+  const inspection = inspectCsv(`${headers}\nGenerator,Public Works,Power,2,Ready,Backup,Yes,Operational,None,High,$100,Memo`);
+  assert.equal(inspection.headerRow, 1);
+  assert.deepEqual(Object.values(inspection.suggestedMapping), Array.from({ length: 12 }, (_, index) => index));
+  const result = mapCsvRecords(inspection, inspection.suggestedMapping);
+  assert.equal(result.records[0].assetType, "Generator");
+  assert.equal(result.records[0].quantity, "2");
+});
+
+test("explicit mapping supports arbitrary custom headings", () => {
+  const inspection = inspectCsv("Equipment label,Owning team,Count on hand,Free text\nPortable pump,Utilities,7,Trailer mounted");
+  const result = mapCsvRecords(inspection, { assetType: 0, department: 1, quantity: 2, notes: 3 });
+  assert.deepEqual(result.records[0], {
+    assetType: "Portable pump", department: "Utilities", category: "", quantity: "7", availability: "",
+    eocRole: "", operator: "", status: "", gapDescription: "", priority: "", unitCost: "", notes: "Trailer mounted"
+  });
+});
+
+test("mapping requires Asset Type and rejects duplicate source assignments", () => {
+  const inspection = inspectCsv("Thing,Team\nPump,Utilities");
+  assert.throws(() => mapCsvRecords(inspection, { department: 1 }), /Asset Type mapping is required/i);
+  assert.throws(() => mapCsvRecords(inspection, { assetType: 0, category: 0 }), /Duplicate assignment/i);
+});
+
+test("inspection reports malformed and unusable CSV clearly", () => {
+  assert.throws(() => inspectCsv(""), /empty/i);
+  assert.throws(() => inspectCsv('Asset Type\n"Pump'), /closing quote/i);
+  assert.throws(() => inspectCsv("Asset Type"), /header row/i);
 });
 
 test("extractor rejects an unrelated CSV", () => {
