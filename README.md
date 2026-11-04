@@ -28,7 +28,7 @@ Opening `index.html` directly with `file://` is unsupported because modules and 
 
 ## Configuration
 
-Runtime public configuration is in `config/app.json`. The OAuth client ID is a public identifier, not a secret. Its `popupCallbackUrl` deliberately remains fixed to the already-registered callback in `jonpedder/resource-asset-management`; this repo does not modify that registration or the old application.
+Runtime public configuration is in `config/app.json`. The OAuth client ID is a public identifier, not a secret. Asset Management uses its dedicated registered callback at `https://jonpedder.github.io/asset-management/oauth-callback.html`; the existing Resource & Asset Management application and callback are not modified.
 
 The fallback center is configured to an approximate San Mateo County map center. It is used only to create clearly labeled deterministic mock points when no resource or facility geometry can be matched; it is not an operational asset location.
 
