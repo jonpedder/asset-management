@@ -12,6 +12,8 @@ First-release static MVP for read-only operational resource and facility invento
 - Location hierarchy: current resource match, facility match, deterministic mocked county point
 - Distinct imported/mocked symbology and mocked-point visibility control
 - Invented demo data available only after the operational service cannot load
+- Settings & Help page with browser-local branding, labels, colors, connection diagnostics, and startup defaults
+- Dependency-free, branded Help & How-to PDF generation in the browser
 - Allowlisted `site/` build artifact for GitHub Pages
 
 ## Local development

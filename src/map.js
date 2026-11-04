@@ -16,6 +16,11 @@ const symbols = {
 };
 
 export async function initializeMap(config, onSelect) {
+  if (config.resourceColors) {
+    symbols.imported.color = config.resourceColors.imported || symbols.imported.color;
+    symbols.mocked.color = config.resourceColors.mocked || symbols.mocked.color;
+    symbols.demo.color = config.resourceColors.demo || symbols.demo.color;
+  }
   const [Map, MapView, GraphicClass, GraphicsLayerClass] = await $arcgis.import([
     "@arcgis/core/Map.js",
     "@arcgis/core/views/MapView.js",

@@ -6,6 +6,8 @@ import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDem
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
+import { loadConfig } from "./config.js";
+import { applyPresentation } from "./presentation.js";
 
 const state = {
   config: null,
@@ -308,12 +310,14 @@ async function main() {
   cacheElements();
   bindEvents();
   try {
-    const response = await fetch("./config/app.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`Configuration HTTP ${response.status}`);
-    state.config = await response.json();
+    state.config = await loadConfig("./config/app.json");
+    applyPresentation(state.config);
     byId("serviceItemId").textContent = state.config.featureServiceItemId;
     byId("privacyNote").textContent = state.config.import.privacyNote;
+    elements.sourceFilter.value = state.config.operatorDefaults?.defaultSourceFilter || "";
+    elements.mockedToggle.checked = state.config.operatorDefaults?.showMockedPoints !== false;
     await initializeMap(state.config, showDetail);
+    setMockedVisible(elements.mockedToggle.checked);
     const auth = await initializeAuth(state.config);
     state.signedIn = auth.signedIn;
     state.oauthConfigured = auth.oauthConfigured;
