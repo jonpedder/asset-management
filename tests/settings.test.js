@@ -13,7 +13,18 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   const html = await readFile(new URL("../settings.html", import.meta.url), "utf8");
   assert.match(html, /role="tablist"/); assert.match(html, />Settings<\/button>/); assert.match(html, />Configuration<\/button>/); assert.match(html, />Help &amp; How-to<\/button>/);
   assert.match(html, /id="settingsImportForm"/); assert.match(html, /id="settingsCsvFile"/); assert.match(html, /id="clearStagedImport"/); assert.match(html, /id="openInventoryMap"/);
-  assert.match(html, /sessionStorage/); assert.match(html, /Expected columns/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
+  assert.match(html, /sessionStorage/); assert.match(html, /Map any headings/); assert.match(html, /id="fieldMappingRegion"/); assert.match(html, /id="mappingRows"/); assert.match(html, /id="resetAutomaticMappings"/); assert.match(html, /id="mappingPreview"/);
+  assert.match(html, /Asset Type is required/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
+});
+
+test("settings runtime inspects, maps, previews, normalizes, and stages the selected CSV", async () => {
+  const source = await readFile(new URL("../src/settings.js", import.meta.url), "utf8");
+  assert.match(source, /inspectCsv\(text\)/);
+  assert.match(source, /mapCsvRecords\(importInspection, importMapping\)/);
+  assert.match(source, /result\.records\.slice\(0, 5\)/);
+  assert.match(source, /records\.map\(normalizeImportedRecord\)/);
+  assert.match(source, /saveImportSession/);
+  assert.match(source, /settingsCsvFile.*change.*inspectSelectedFile/);
 });
 
 test("main page has no import dialog and places a square settings cog at the far right", async () => {

@@ -1,7 +1,7 @@
 import { clearConfigOverrides, loadConfig, mergeConfig, saveConfigOverrides, validateConfig } from "./config.js";
 import { applyPresentation } from "./presentation.js";
 import { buildHelpPdf } from "./help-pdf.js";
-import { extractCsvRecords } from "./csv.js";
+import { inspectCsv, mapCsvRecords, TARGET_FIELDS } from "./csv.js";
 import { normalizeImportedRecord } from "./normalize.js";
 import { clearImportSession, readImportSession, saveImportSession } from "./import-session.js";
 
@@ -12,6 +12,9 @@ const defaults = {
   resource: { current: "#36b37e", imported: "#f2a900", mocked: "#e05262", demo: "#8bd3ff" }
 };
 let config; let draftLogo = "";
+let importInspection = null;
+let importMapping = {};
+let fileReadSequence = 0;
 
 function announce(message, tone = "success") {
   $("saveStatus").textContent = message;
@@ -33,18 +36,114 @@ function renderImportSession(payload, message = "") {
     ? `${payload.records.length} normalized inventory rows are staged for this tab/session; ${payload.ignoredRows} rows were ignored. Open the Inventory map to resolve locations.`
     : "No CSV is staged in this browser session.");
 }
-async function stageImport(event) {
-  event.preventDefault();
+function clearMappingUi() {
+  importInspection = null;
+  importMapping = {};
+  $("fieldMappingRegion").hidden = true;
+  $("mappingRows").replaceChildren();
+  $("detectedSourceColumns").replaceChildren();
+  $("mappingPreview").hidden = true;
+  $("mappingPreviewHead").replaceChildren();
+  $("mappingPreviewBody").replaceChildren();
+  $("mappingValidation").className = "feedback";
+  $("mappingValidation").textContent = "";
+  $("stageImport").disabled = true;
+}
+function currentMappingFromControls() {
+  return Object.fromEntries([...$("mappingRows").querySelectorAll("select[data-target-field]")].map((select) => [
+    select.dataset.targetField,
+    select.value === "" ? null : Number(select.value)
+  ]));
+}
+function renderMappedPreview() {
+  if (!importInspection) return;
+  importMapping = currentMappingFromControls();
+  const validation = $("mappingValidation");
+  try {
+    const result = mapCsvRecords(importInspection, importMapping);
+    const mappedFields = TARGET_FIELDS.filter((field) => importMapping[field.key] != null);
+    const headRow = document.createElement("tr");
+    for (const field of mappedFields) { const th = document.createElement("th"); th.scope = "col"; th.textContent = field.label; headRow.append(th); }
+    $("mappingPreviewHead").replaceChildren(headRow);
+    $("mappingPreviewBody").replaceChildren(...result.records.slice(0, 5).map((record) => {
+      const tr = document.createElement("tr");
+      for (const field of mappedFields) { const td = document.createElement("td"); td.textContent = record[field.key] || "—"; tr.append(td); }
+      return tr;
+    }));
+    $("mappingPreview").hidden = false;
+    validation.className = "feedback success";
+    validation.textContent = `${result.records.length} usable row${result.records.length === 1 ? "" : "s"} ready to stage; previewing the first ${Math.min(5, result.records.length)}.`;
+    $("stageImport").disabled = false;
+  } catch (error) {
+    $("mappingPreview").hidden = true;
+    $("mappingPreviewHead").replaceChildren();
+    $("mappingPreviewBody").replaceChildren();
+    validation.className = "feedback error";
+    validation.textContent = error.message;
+    $("stageImport").disabled = true;
+  }
+}
+function applyAutomaticMappings() {
+  if (!importInspection) return;
+  importMapping = { ...importInspection.suggestedMapping };
+  for (const select of $("mappingRows").querySelectorAll("select[data-target-field]")) {
+    const selected = importMapping[select.dataset.targetField];
+    select.value = selected == null ? "" : String(selected);
+  }
+  renderMappedPreview();
+}
+function renderMappingControls(inspection, fileName) {
+  $("fieldMappingRegion").hidden = false;
+  $("detectedHeaderSummary").textContent = `${fileName}: detected header row ${inspection.headerRow} with ${inspection.sourceColumns.length} source column${inspection.sourceColumns.length === 1 ? "" : "s"}.`;
+  $("detectedSourceColumns").replaceChildren(...inspection.sourceColumns.map((column) => {
+    const span = document.createElement("span"); span.textContent = `${column.index + 1}. ${column.name}`; return span;
+  }));
+  const rows = TARGET_FIELDS.map((field) => {
+    const tr = document.createElement("tr");
+    const name = document.createElement("th"); name.scope = "row"; name.textContent = field.label;
+    const requirement = document.createElement("td"); requirement.textContent = field.required ? "Required" : "Optional"; requirement.className = field.required ? "required-field" : "optional-field";
+    const cell = document.createElement("td"); const label = document.createElement("label"); label.className = "sr-only"; label.htmlFor = `map-${field.key}`; label.textContent = `Incoming CSV column for ${field.label}`;
+    const select = document.createElement("select"); select.id = `map-${field.key}`; select.dataset.targetField = field.key; select.required = field.required;
+    const none = document.createElement("option"); none.value = ""; none.textContent = "Not mapped"; select.append(none);
+    for (const column of inspection.sourceColumns) { const option = document.createElement("option"); option.value = String(column.index); option.textContent = `${column.index + 1}. ${column.name}`; select.append(option); }
+    select.addEventListener("change", renderMappedPreview); cell.append(label, select); tr.append(name, requirement, cell); return tr;
+  });
+  $("mappingRows").replaceChildren(...rows);
+  applyAutomaticMappings();
+}
+async function inspectSelectedFile() {
+  const sequence = ++fileReadSequence;
   const file = $("settingsCsvFile").files?.[0];
+  clearMappingUi();
   const feedback = $("settingsImportFeedback");
   feedback.className = "feedback";
-  feedback.textContent = "Validating and parsing locally…";
+  if (!file) { feedback.textContent = "Choose a CSV to inspect its columns locally."; return; }
   try {
-    if (!file) throw new Error("Choose a CSV file.");
-    if (file.size > config.import.maxFileBytes) throw new Error(`CSV exceeds the ${Math.round(config.import.maxFileBytes / 1_000_000)} MB local import limit.`);
-    const { records, ignoredRows, headerRow } = extractCsvRecords(await file.text());
+    const maxBytes = config?.import?.maxFileBytes ?? 10_000_000;
+    if (file.size > maxBytes) throw new Error(`CSV exceeds the ${Math.round(maxBytes / 1_000_000)} MB local import limit.`);
+    feedback.textContent = "Inspecting the CSV locally…";
+    const text = await file.text();
+    if (sequence !== fileReadSequence) return;
+    importInspection = inspectCsv(text);
+    renderMappingControls(importInspection, file.name);
+    feedback.className = "feedback success";
+    feedback.textContent = "CSV parsed locally. Review the detected columns, mappings, and preview before staging.";
+  } catch (error) {
+    if (sequence !== fileReadSequence) return;
+    clearMappingUi();
+    feedback.className = "feedback error";
+    feedback.textContent = error.message;
+    announce(error.message, "error");
+  }
+}
+function stageImport(event) {
+  event.preventDefault();
+  const feedback = $("settingsImportFeedback");
+  try {
+    if (!$("settingsCsvFile").files?.[0] || !importInspection) throw new Error("Choose and inspect a CSV file before staging.");
+    const { records, ignoredRows, headerRow } = mapCsvRecords(importInspection, currentMappingFromControls());
     const payload = saveImportSession(records.map(normalizeImportedRecord), { ignoredRows, headerRow });
-    renderImportSession(payload, `${payload.records.length} rows loaded from header row ${headerRow}; ${ignoredRows} scaffolding or non-data rows ignored. The normalized records are staged only for this tab/session.`);
+    renderImportSession(payload, `${payload.records.length} rows loaded from header row ${headerRow}; ${ignoredRows} scaffolding or non-data rows ignored. The selected mapping was normalized and staged only for this tab/session.`);
     announce(`Staged ${payload.records.length} inventory rows for the map.`);
   } catch (error) {
     feedback.className = "feedback error";
@@ -112,8 +211,10 @@ document.querySelectorAll(".help-nav a").forEach((link) => link.addEventListener
 $("previewLogo").addEventListener("click", () => { const url = $("logoUrl").value.trim(); if (url && !/^https:\/\//i.test(url)) { previewLogo("", "Logo URL must use HTTPS."); return; } previewLogo(url, url ? "Logo URL ready to save." : "Default AM mark selected."); });
 $("defaultLogo").addEventListener("click", () => { $("logoUrl").value = ""; $("logoUpload").value = ""; previewLogo("", "Default AM mark selected."); });
 $("logoUpload").addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.size > 307200) { event.target.value = ""; previewLogo("", "Choose PNG, JPEG, GIF, or WebP no larger than 300 KB."); return; } const reader = new FileReader(); reader.addEventListener("load", () => { $("logoUrl").value = ""; previewLogo(String(reader.result), "Uploaded logo ready to save."); }); reader.readAsDataURL(file); });
+$("settingsCsvFile").addEventListener("change", inspectSelectedFile);
+$("resetAutomaticMappings").addEventListener("click", applyAutomaticMappings);
 $("settingsImportForm").addEventListener("submit", stageImport);
-$("clearStagedImport").addEventListener("click", () => { clearImportSession(); $("settingsCsvFile").value = ""; renderImportSession(null); announce("Staged import cleared from this browser session."); });
+$("clearStagedImport").addEventListener("click", () => { clearImportSession(); $("settingsCsvFile").value = ""; fileReadSequence += 1; clearMappingUi(); renderImportSession(null); announce("Staged import cleared from this browser session."); });
 $("save").addEventListener("click", () => { try { const overrides = values(); validateConfig(mergeConfig(config, overrides)); saveConfigOverrides(overrides); announce("Settings saved. Reloading…"); setTimeout(() => location.reload(), 500); } catch (error) { announce(error.message, "error"); } });
 $("reset").addEventListener("click", () => { clearConfigOverrides(); announce("Browser overrides removed. Reloading…"); setTimeout(() => location.reload(), 400); });
 $("downloadHelpPdf").addEventListener("click", downloadHelp);

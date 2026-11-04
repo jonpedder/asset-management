@@ -74,22 +74,25 @@ export function normalizeOperator(value) {
 }
 
 export function normalizeImportedRecord(row, index = 0) {
-  const quantity = parseRange(row["Est. Qty"]);
-  const unitCost = parseRange(row["Est. Unit Cost"], { currency: true });
+  // Accept both the legacy documented headings and the Settings mapper's schema keys.
+  const value = (key, legacy) => row[key] ?? row[legacy] ?? "";
+  const quantity = parseRange(value("quantity", "Est. Qty"));
+  const unitCost = parseRange(value("unitCost", "Est. Unit Cost"), { currency: true });
+  const availability = value("availability", "Availability");
   return {
     id: `import-${index + 1}`,
-    assetType: cleanText(row["Asset Type"]),
-    department: cleanText(row.Dept),
-    category: cleanText(row.Category),
+    assetType: cleanText(value("assetType", "Asset Type")),
+    department: cleanText(value("department", "Dept")),
+    category: cleanText(value("category", "Category")),
     quantity,
-    availability: cleanText(row.Availability),
-    eocRole: cleanText(row["EOC Role / Use"]),
-    operator: normalizeOperator(row["Operator Required?"]),
-    status: normalizeStatus(row.Status || row.Availability),
-    gapDescription: cleanText(row["Gap Description"]),
-    priority: normalizePriority(row["Procurement Priority"]),
+    availability: cleanText(availability),
+    eocRole: cleanText(value("eocRole", "EOC Role / Use")),
+    operator: normalizeOperator(value("operator", "Operator Required?")),
+    status: normalizeStatus(value("status", "Status") || availability),
+    gapDescription: cleanText(value("gapDescription", "Gap Description")),
+    priority: normalizePriority(value("priority", "Procurement Priority")),
     unitCost,
-    notes: cleanText(row["Notes / Source"]),
+    notes: cleanText(value("notes", "Notes / Source")),
     source: "Imported CSV (browser-local preview)",
     sourceType: "import",
     isMockLocation: false,

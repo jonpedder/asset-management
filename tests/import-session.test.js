@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { clearImportSession, IMPORT_SESSION_KEY, readImportSession, saveImportSession } from "../src/import-session.js";
 import { normalizeImportedRecord } from "../src/normalize.js";
+import { inspectCsv, mapCsvRecords } from "../src/csv.js";
 
 function storage() {
   const values = new Map();
@@ -28,6 +29,17 @@ test("import session saves, reads, and clears normalized records in supplied ses
   assert.doesNotMatch(store.values.get(IMPORT_SESSION_KEY), /"raw":\{/);
   clearImportSession(store);
   assert.equal(readImportSession(store), null);
+});
+
+test("explicit field mappings flow through normalization into session staging", () => {
+  const store = storage();
+  const inspection = inspectCsv("Equipment,Owner,On hand,Cost each\nPump,Utilities,3 - 5,$250");
+  const mapped = mapCsvRecords(inspection, { assetType: 0, department: 1, quantity: 2, unitCost: 3 });
+  const saved = saveImportSession(mapped.records.map(normalizeImportedRecord), mapped, store);
+  assert.equal(saved.records[0].assetType, "Pump");
+  assert.equal(saved.records[0].department, "Utilities");
+  assert.equal(saved.records[0].quantity.min, 3);
+  assert.equal(saved.records[0].unitCost.estimate, 250);
 });
 
 test("import session rejects empty or oversized record sets and discards invalid stored shapes", () => {
