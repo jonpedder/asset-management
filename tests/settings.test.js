@@ -9,13 +9,21 @@ test("help generator returns a valid PDF 1.4 document", async () => {
   assert.equal(blob.type, "application/pdf"); assert.match(text, /^%PDF-1\.4/); assert.match(text, /%%EOF$/); assert.match(text, /County Assets/);
 });
 
-test("settings page exposes tabs, local configuration, help, and PDF action", async () => {
+test("settings page exposes import controls, tabs, help, and PDF action", async () => {
   const html = await readFile(new URL("../settings.html", import.meta.url), "utf8");
   assert.match(html, /role="tablist"/); assert.match(html, />Settings<\/button>/); assert.match(html, />Configuration<\/button>/); assert.match(html, />Help &amp; How-to<\/button>/);
-  assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
+  assert.match(html, /id="settingsImportForm"/); assert.match(html, /id="settingsCsvFile"/); assert.match(html, /id="clearStagedImport"/); assert.match(html, /id="openInventoryMap"/);
+  assert.match(html, /sessionStorage/); assert.match(html, /Expected columns/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
 });
 
-test("main runtime loads merged config and applies presentation", async () => {
+test("main page has no import button or dialog", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  assert.doesNotMatch(html, /id="importButton"/); assert.doesNotMatch(html, /id="importDialog"/); assert.doesNotMatch(html, /id="csvFile"/);
+});
+
+test("main runtime loads config, consumes staged imports, and applies presentation", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  assert.match(app, /import \{ readImportSession \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
+  assert.doesNotMatch(app, /importButton|importDialog|importForm|csvFile/);
 });

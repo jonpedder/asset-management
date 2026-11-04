@@ -20,6 +20,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {
   const build = await readFile(new URL("../scripts/build.mjs", import.meta.url), "utf8");
   assert.match(build, /"settings\.html"/);
-  assert.match(build, /const directories = \["src", "styles"\]/);
+  assert.match(build, /const runtimeFiles = \[/);
+  assert.match(build, /"src\/import-session\.js"/);
   assert.doesNotMatch(build, /\.csv["']/i);
 });

@@ -19,6 +19,15 @@ test("extractor finds header and ignores draft scaffolding rows", () => {
   assert.ok(result.ignoredRows >= 4);
 });
 
+test("extractor preserves the 32-row customer draft behavior", () => {
+  const dataRows = Array.from({ length: 32 }, (_, index) => `Asset ${index + 1},Dept ${index % 4},Category,1 - 2,Ready,Role,No,Operational,None,Medium,$100,Source`).join("\n");
+  const csv = `INTERNAL DRAFT\nSummary: 32-row worksheet\n\n${headers}\nSECTION: INVENTORY\n${dataRows}\nDisclaimer: estimates only\n`;
+  const result = extractCsvRecords(csv);
+  assert.equal(result.records.length, 32);
+  assert.equal(result.headerRow, 4);
+  assert.ok(result.ignoredRows >= 5);
+});
+
 test("extractor rejects an unrelated CSV", () => {
   assert.throws(() => extractCsvRecords("name,value\na,1"), /header row/i);
 });

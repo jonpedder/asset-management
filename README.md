@@ -36,7 +36,7 @@ The fallback center is configured to an approximate San Mateo County map center.
 
 ## Privacy and data safety
 
-The application implements no feature-service edits. Imported CSV text and normalized records remain in memory for the current browser page and are cleared on reload. `.gitignore` excludes CSV files, and the source draft is not included.
+The application implements no feature-service edits. Import begins in Settings. CSV text is parsed locally and discarded; only normalized records are staged in `sessionStorage` for the current tab/session so they survive navigation to the map. They are cleared explicitly or when the browser session ends. No import uses `localStorage`, the repository, or a service. `.gitignore` excludes CSV files, and the source draft is not included.
 
 ## Build and deployment
 

@@ -8,7 +8,7 @@ const allowed = {
   oauth: ["enabled", "clientId", "mode", "redirectUrl", "popupCallbackUrl"],
   map: ["basemap", "center", "zoom"], import: ["maxFileBytes", "privacyNote"],
   branding: ["appName", "subtitle", "logoUrl", "colors"],
-  labels: ["inventoryHeading", "resourcesTab", "facilitiesTab", "importButton", "selectionHeading"],
+  labels: ["inventoryHeading", "resourcesTab", "facilitiesTab", "settingsImport", "selectionHeading"],
   statusColors: ["available", "limited", "unavailable", "unknown"], resourceColors: ["current", "imported", "mocked", "demo"],
   operatorDefaults: ["showMockedPoints", "compactInventory", "defaultSourceFilter"]
 };

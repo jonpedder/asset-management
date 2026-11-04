@@ -1,6 +1,5 @@
-import { extractCsvRecords } from "./csv.js";
-import { normalizeImportedRecord } from "./normalize.js";
 import { assignLocations } from "./location.js";
+import { readImportSession } from "./import-session.js";
 import { initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js";
 import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord } from "./map.js";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
@@ -14,6 +13,7 @@ const state = {
   resources: [],
   facilities: [],
   imported: [],
+  stagedImport: null,
   demoActive: false,
   serviceAvailable: false,
   signedIn: false,
@@ -27,7 +27,7 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "importButton", "importDialog", "csvFile", "importForm", "importFeedback", "resourceSearch", "sourceFilter", "resourceRows", "facilityRows", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "locationSummary", "lastUpdated", "mapMessage", "toastRegion"].forEach((id) => { elements[id] = byId(id); });
+  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "resourceRows", "facilityRows", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "locationSummary", "lastUpdated", "mapMessage", "toastRegion"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -86,7 +86,7 @@ function updateMetrics() {
   elements.coverageMetric.textContent = `${coverage}%`;
   elements.locationSummary.textContent = state.imported.length
     ? `${state.locationSummary.resourceMatches} resource matches · ${state.locationSummary.facilityMatches} facility matches · ${state.locationSummary.mocked} mocked county points`
-    : "Import a CSV to run location validation.";
+    : "Stage a CSV in Settings to run location validation.";
 }
 
 function sourceLabel(record) {
@@ -181,6 +181,24 @@ function renderAll() {
   updateMetrics();
 }
 
+function consumeStagedImport() {
+  if (!state.stagedImport?.records?.length) {
+    state.imported = [];
+    displayImported([]);
+    return;
+  }
+  const { records, summary } = assignLocations(
+    state.stagedImport.records,
+    state.resources,
+    state.facilities,
+    state.config.map.center
+  );
+  state.imported = records;
+  state.locationSummary = summary;
+  displayImported(records);
+  if (records.length) elements.mapMessage.hidden = true;
+}
+
 async function loadOperationalData() {
   setStatus("Loading operational data", "busy");
   elements.mapMessage.hidden = false;
@@ -201,14 +219,18 @@ async function loadOperationalData() {
     elements.serviceStatus.textContent = `Connected · ${state.resources.length} resources · ${state.facilities.length} facilities`;
     elements.lastUpdated.textContent = `Loaded ${new Date().toLocaleString()}`;
     setStatus("Operational", "ok");
+    consumeStagedImport();
     renderAll();
   } catch (error) {
     state.serviceAvailable = false;
+    state.resources = [];
+    state.facilities = [];
     elements.serviceStatus.textContent = `Service unavailable: ${error.message}`;
     elements.demoButton.hidden = false;
     elements.mapMessage.hidden = false;
-    elements.mapMessage.innerHTML = "<strong>Operational service unavailable</strong><span>Sign in if authorized, or open invented demo mode. Local CSV preview remains available.</span>";
+    elements.mapMessage.innerHTML = "<strong>Operational service unavailable</strong><span>Sign in if authorized, or open invented demo mode. Staged CSV records still use deterministic mocked points.</span>";
     setStatus("Service access needed", "warn");
+    consumeStagedImport();
     renderAll();
   }
 }
@@ -227,25 +249,10 @@ async function attemptInitialAccess() {
     elements.serviceStatus.textContent = `Anonymous attempt did not load the private service (${probe.reason}).`;
     elements.demoButton.hidden = false;
     elements.mapMessage.hidden = false;
-    elements.mapMessage.innerHTML = "<strong>Sign-in may be required</strong><span>The anonymous attempt could not access the service. No service edit was attempted.</span>";
+    elements.mapMessage.innerHTML = "<strong>Sign-in may be required</strong><span>The anonymous attempt could not access the service. Staged CSV records still use deterministic mocked points.</span>";
     setStatus("Authentication available", "warn");
+    consumeStagedImport();
   }
-}
-
-async function importCsv(file) {
-  if (!file) throw new Error("Choose a CSV file.");
-  if (file.size > state.config.import.maxFileBytes) throw new Error(`CSV exceeds the ${Math.round(state.config.import.maxFileBytes / 1_000_000)} MB local preview limit.`);
-  const text = await file.text();
-  const { records, ignoredRows, headerRow } = extractCsvRecords(text);
-  const normalized = records.map(normalizeImportedRecord);
-  const { records: located, summary } = assignLocations(normalized, state.resources, state.facilities, state.config.map.center);
-  state.imported = located;
-  state.locationSummary = summary;
-  displayImported(located);
-  renderAll();
-  elements.importFeedback.className = "feedback success";
-  elements.importFeedback.textContent = `${records.length} records loaded from header row ${headerRow}; ${ignoredRows} non-data rows ignored. ${summary.resourceMatches} resource matches, ${summary.facilityMatches} facility matches, ${summary.mocked} mocked county points. Coverage ${summary.coveragePercent}% (not accuracy).`;
-  toast(`Imported ${records.length} browser-local preview records.`, "success");
 }
 
 function bindEvents() {
@@ -276,19 +283,6 @@ function bindEvents() {
     setStatus("Invented demo", "warn");
     renderAll();
   });
-  elements.importButton.addEventListener("click", () => elements.importDialog.showModal());
-  byId("cancelImport").addEventListener("click", () => elements.importDialog.close());
-  elements.importForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    elements.importFeedback.className = "feedback";
-    elements.importFeedback.textContent = "Parsing locally…";
-    try {
-      await importCsv(elements.csvFile.files[0]);
-    } catch (error) {
-      elements.importFeedback.className = "feedback error";
-      elements.importFeedback.textContent = error.message;
-    }
-  });
   elements.resourceSearch.addEventListener("input", renderResources);
   elements.sourceFilter.addEventListener("change", renderResources);
   elements.mockedToggle.addEventListener("change", () => setMockedVisible(elements.mockedToggle.checked));
@@ -313,7 +307,7 @@ async function main() {
     state.config = await loadConfig("./config/app.json");
     applyPresentation(state.config);
     byId("serviceItemId").textContent = state.config.featureServiceItemId;
-    byId("privacyNote").textContent = state.config.import.privacyNote;
+    state.stagedImport = readImportSession();
     elements.sourceFilter.value = state.config.operatorDefaults?.defaultSourceFilter || "";
     elements.mockedToggle.checked = state.config.operatorDefaults?.showMockedPoints !== false;
     await initializeMap(state.config, showDetail);
