@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" class="calcite-mode-dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071824">
+  <meta name="description" content="Read-only operational asset inventory map with browser-local CSV preview.">
+  <title>Asset Management | Operational Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
+  <link rel="stylesheet" href="./styles/app.css">
+  <script type="module" src="https://js.arcgis.com/5.1/"></script>
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to operational workspace</a>
+  <header class="app-header">
+    <div class="brand" aria-label="Asset Management">
+      <span class="brand-mark" aria-hidden="true">AM</span>
+      <span><strong>Asset Management</strong><small>Operational inventory preview</small></span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" id="importButton" type="button">Import local CSV</button>
+      <button class="btn" id="demoButton" type="button" hidden>Open invented demo</button>
+      <button class="btn" id="signInButton" type="button">Sign in</button>
+      <button class="btn btn-quiet" id="signOutButton" type="button" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <section class="status-strip" aria-label="Application and data status">
+    <span id="systemStatus" class="operational-tag" data-tone="busy">Initializing</span>
+    <span><strong>Auth:</strong> <span id="authStatus">Checking…</span></span>
+    <span class="status-grow"><strong>Data:</strong> <span id="serviceStatus">Anonymous access attempt pending</span></span>
+    <span id="lastUpdated">Not loaded</span>
+  </section>
+
+  <section class="kpi-strip" aria-label="Inventory metrics">
+    <article><span>Current records</span><strong id="verifiedRecords">0</strong><small>Verified service records</small></article>
+    <article><span>Current quantity</span><strong id="verifiedQuantity">0</strong><small>Service quantity fields</small></article>
+    <article><span>Imported records</span><strong id="importedRecords">0</strong><small>Browser-local preview</small></article>
+    <article><span>Imported est. qty</span><strong id="importedQuantity">0</strong><small>Minimum–maximum range</small></article>
+    <article><span>Location coverage</span><strong id="coverageMetric">0%</strong><small>Matched geometry, not accuracy</small></article>
+    <article class="benchmark"><span>Reported fleet benchmark</span><strong>1,465</strong><small>Unverified · never added to current totals</small></article>
+  </section>
+
+  <main id="workspace" class="workspace">
+    <section class="inventory-panel panel" aria-labelledby="inventoryHeading">
+      <div class="panel-header">
+        <div><p class="eyebrow">Inventory</p><h1 id="inventoryHeading">Resources &amp; facilities</h1></div>
+        <span class="count-badge"><span id="inventoryCount">0</span> shown</span>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Inventory type">
+        <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel">Resources</button>
+        <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel">Facilities <span id="facilityCount" class="count-inline">0</span></button>
+      </div>
+      <section id="resourcePanel" role="tabpanel" aria-labelledby="resourceTab" class="inventory-content">
+        <div class="filters">
+          <label><span>Search inventory</span><input id="resourceSearch" type="search" placeholder="Asset, department, category…" autocomplete="off"></label>
+          <label><span>Source</span><select id="sourceFilter"><option value="">All sources</option><option value="service">Current service</option><option value="import">Imported preview</option><option value="demo">Invented demo</option></select></label>
+          <label class="toggle"><input id="mockedToggle" type="checkbox" checked><span>Show mocked import points</span></label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption class="sr-only">Resource inventory</caption>
+            <thead><tr><th scope="col">Asset</th><th scope="col">Department</th><th scope="col">Category</th><th scope="col">Qty</th><th scope="col">Status</th><th scope="col">Source</th></tr></thead>
+            <tbody id="resourceRows"><tr><td colspan="6" class="empty-cell">Loading inventory…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+      <section id="facilityPanel" role="tabpanel" aria-labelledby="facilityTab" class="inventory-content" hidden>
+        <div class="table-wrap">
+          <table>
+            <caption class="sr-only">Facilities inventory</caption>
+            <thead><tr><th scope="col">Facility</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Source</th></tr></thead>
+            <tbody id="facilityRows"><tr><td colspan="4" class="empty-cell">Loading facilities…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="map-panel" aria-label="Operational map">
+      <div id="mapView"></div>
+      <div id="mapMessage" class="map-message" role="status"><strong>Preparing map</strong><span>Loading ArcGIS Maps SDK for JavaScript 5.1…</span></div>
+      <div class="map-legend" aria-label="Map legend"><span><i class="dot current"></i>Current</span><span><i class="dot imported"></i>Imported matched</span><span><i class="dot mocked"></i>Imported mocked</span><span><i class="dot demo"></i>Invented demo</span></div>
+    </section>
+
+    <aside class="detail-panel panel" aria-labelledby="detailHeading">
+      <div class="panel-header"><div><p class="eyebrow">Selection</p><h2 id="detailHeading">Inventory detail</h2></div></div>
+      <div class="validation-card">
+        <strong>Location validation</strong>
+        <p id="locationSummary">Import a CSV to run location validation.</p>
+      </div>
+      <div id="detail" class="detail-scroll">
+        <div class="empty-state"><span aria-hidden="true">⌖</span><strong>Select a record</strong><p>Choose a table row or imported map point to inspect source, quantity, and location provenance.</p></div>
+      </div>
+      <footer class="detail-footer">
+        <span>Feature service item</span>
+        <code id="serviceItemId">loading…</code>
+        <p>Read-only application. No service edits are implemented.</p>
+      </footer>
+    </aside>
+  </main>
+
+  <dialog id="importDialog" class="modal" aria-labelledby="importTitle">
+    <form id="importForm" method="dialog">
+      <div class="modal-header">
+        <div><p class="eyebrow">Local preview</p><h2 id="importTitle">Import asset inventory CSV</h2></div>
+        <button id="cancelImport" class="icon-button" type="button" aria-label="Close import dialog">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="privacy-callout"><strong>Privacy:</strong> <span id="privacyNote">The file stays in this browser session.</span></div>
+        <label class="file-field"><span>CSV file</span><input id="csvFile" name="csvFile" type="file" accept=".csv,text/csv" required></label>
+        <p class="field-help">Expected columns: Asset Type, Dept, Category, Est. Qty, Availability, EOC Role / Use, Operator Required?, Status, Gap Description, Procurement Priority, Est. Unit Cost, Notes / Source.</p>
+        <p class="field-help">Title, summary, section, disclaimer, and blank rows are ignored. One point is created per imported record—never per quantity.</p>
+        <div id="importFeedback" class="feedback" role="status" aria-live="polite"></div>
+      </div>
+      <div class="modal-actions"><button id="cancelImportBottom" class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button><button class="btn btn-primary" type="submit">Preview locally</button></div>
+    </form>
+  </dialog>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+</body>
+</html>
