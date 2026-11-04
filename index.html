@@ -23,8 +23,7 @@
       <span><strong data-brand-name>Asset Management</strong><small data-brand-subtitle>Operational inventory preview</small></span>
     </div>
     <div class="header-actions">
-      <a class="btn btn-quiet nav-button" href="./settings.html" aria-label="Open Settings and Help">Settings &amp; Help</a>
-      <button class="btn btn-primary" id="importButton" data-label="importButton" type="button">Import local CSV</button>
+      <a class="btn btn-quiet nav-button" href="./settings.html" aria-label="Open Settings, CSV import, and Help">Settings, Import &amp; Help</a>
       <button class="btn" id="demoButton" type="button" hidden>Open invented demo</button>
       <button class="btn" id="signInButton" type="button">Sign in</button>
       <button class="btn btn-quiet" id="signOutButton" type="button" hidden>Sign out</button>
@@ -92,7 +91,7 @@
       <div class="panel-header"><div><p class="eyebrow">Selection</p><h2 id="detailHeading">Inventory detail</h2></div></div>
       <div class="validation-card">
         <strong>Location validation</strong>
-        <p id="locationSummary">Import a CSV to run location validation.</p>
+        <p id="locationSummary">Stage a CSV in Settings to run location validation.</p>
       </div>
       <div id="detail" class="detail-scroll">
         <div class="empty-state"><span aria-hidden="true">⌖</span><strong>Select a record</strong><p>Choose a table row or imported map point to inspect source, quantity, and location provenance.</p></div>
@@ -105,22 +104,6 @@
     </aside>
   </main>
 
-  <dialog id="importDialog" class="modal" aria-labelledby="importTitle">
-    <form id="importForm" method="dialog">
-      <div class="modal-header">
-        <div><p class="eyebrow">Local preview</p><h2 id="importTitle">Import asset inventory CSV</h2></div>
-        <button id="cancelImport" class="icon-button" type="button" aria-label="Close import dialog">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="privacy-callout"><strong>Privacy:</strong> <span id="privacyNote">The file stays in this browser session.</span></div>
-        <label class="file-field"><span>CSV file</span><input id="csvFile" name="csvFile" type="file" accept=".csv,text/csv" required></label>
-        <p class="field-help">Expected columns: Asset Type, Dept, Category, Est. Qty, Availability, EOC Role / Use, Operator Required?, Status, Gap Description, Procurement Priority, Est. Unit Cost, Notes / Source.</p>
-        <p class="field-help">Title, summary, section, disclaimer, and blank rows are ignored. One point is created per imported record—never per quantity.</p>
-        <div id="importFeedback" class="feedback" role="status" aria-live="polite"></div>
-      </div>
-      <div class="modal-actions"><button id="cancelImportBottom" class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button><button class="btn btn-primary" type="submit">Preview locally</button></div>
-    </form>
-  </dialog>
 
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
 </body>

@@ -4,19 +4,20 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
-const files = ["index.html", "settings.html", "oauth-callback.html", "config/app.json"];
-const directories = ["src", "styles"];
+const runtimeFiles = [
+  "index.html", "settings.html", "oauth-callback.html", "config/app.json", "styles/app.css",
+  "src/app.js", "src/auth.js", "src/config.js", "src/csv.js", "src/demo.js", "src/format.js",
+  "src/help-pdf.js", "src/import-session.js", "src/location.js", "src/map.js", "src/normalize.js",
+  "src/presentation.js", "src/service-data.js", "src/settings.js"
+];
 
 await rm(site, { recursive: true, force: true });
 await mkdir(site, { recursive: true });
 
-for (const relative of files) {
+for (const relative of runtimeFiles) {
   const destination = join(site, relative);
   await mkdir(dirname(destination), { recursive: true });
   await cp(join(root, relative), destination);
-}
-for (const relative of directories) {
-  await cp(join(root, relative), join(site, relative), { recursive: true });
 }
 
 const html = await readFile(join(site, "index.html"), "utf8");

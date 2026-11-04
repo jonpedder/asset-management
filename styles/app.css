@@ -234,6 +234,12 @@ td strong { color: var(--app-text); }
 .help-card h4 { margin: .8rem 0 .25rem; color: var(--app-text); font-size: .78rem; }
 .help-callout { margin-bottom: 1rem; padding: .7rem .8rem; border-left: 4px solid var(--app-accent); background: rgba(7,24,36,.6); color: var(--app-muted); font-size: .74rem; line-height: 1.55; }
 .help-pdf-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin-bottom: .9rem; color: var(--app-muted); font-size: .68rem; }
+.import-card .privacy-callout { margin-bottom: .8rem; }
+.import-counts { display: flex; flex-wrap: wrap; gap: .65rem; margin: .8rem 0; }
+.import-counts span { min-width: 145px; padding: .55rem .7rem; border: 1px solid var(--app-border); background: var(--app-bg); color: var(--app-muted); font-size: .7rem; }
+.import-counts strong { display: block; margin-top: .15rem; color: var(--app-text); font-size: 1.1rem; }
+.import-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .75rem; }
+.import-actions .nav-button { display: inline-flex; align-items: center; }
 .compact-inventory td { padding-top: .38rem; padding-bottom: .38rem; }
 .compact-inventory .panel-header { min-height: 52px; padding-top: .55rem; padding-bottom: .55rem; }
 @media (max-width: 760px) { .settings-page { width: min(100% - 1rem,1120px); padding-top: .75rem; } .cfg-grid, .logo-tools, .help-layout { grid-template-columns: 1fr; } .help-nav { position: static; } .settings-surface { padding: .65rem; } .config-list { grid-template-columns: 1fr; } .config-list dd { margin-bottom: .35rem; } }

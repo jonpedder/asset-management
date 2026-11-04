@@ -13,7 +13,7 @@
   "map": { "basemap": "dark-gray-vector", "center": { "longitude": -122.3255, "latitude": 37.563 }, "zoom": 10 },
   "import": {
     "maxFileBytes": 10000000,
-    "privacyNote": "The selected file is parsed in memory in this browser only. It is not uploaded, persisted, or written to the feature service. Reloading clears the preview."
+    "privacyNote": "The selected file is parsed in this browser only. Normalized records are staged in sessionStorage for this tab/session and are never uploaded, written to localStorage, added to the repository, or sent to the feature service. Clear the staged import or end the browser session to remove it."
   },
   "branding": {
     "appName": "Asset Management",
@@ -25,7 +25,7 @@
       "accentStrong": "#ffc94c", "blue": "#4fa3d1", "green": "#36b37e", "red": "#e05262", "focus": "#8bd3ff"
     }
   },
-  "labels": { "inventoryHeading": "Resources & facilities", "resourcesTab": "Resources", "facilitiesTab": "Facilities", "importButton": "Import local CSV", "selectionHeading": "Inventory detail" },
+  "labels": { "inventoryHeading": "Resources & facilities", "resourcesTab": "Resources", "facilitiesTab": "Facilities", "settingsImport": "Import local CSV", "selectionHeading": "Inventory detail" },
   "statusColors": { "available": "#36b37e", "limited": "#f2a900", "unavailable": "#e05262", "unknown": "#afc3cf" },
   "resourceColors": { "current": "#36b37e", "imported": "#f2a900", "mocked": "#e05262", "demo": "#8bd3ff" },
   "operatorDefaults": { "showMockedPoints": true, "compactInventory": false, "defaultSourceFilter": "" }
