@@ -18,11 +18,13 @@
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
   <header class="app-header">
     <div class="brand" aria-label="Asset Management">
-      <span class="brand-mark" aria-hidden="true">AM</span>
-      <span><strong>Asset Management</strong><small>Operational inventory preview</small></span>
+      <img class="brand-logo" data-brand-logo hidden alt="Agency logo">
+      <span class="brand-mark" data-default-brand-mark aria-hidden="true">AM</span>
+      <span><strong data-brand-name>Asset Management</strong><small data-brand-subtitle>Operational inventory preview</small></span>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" id="importButton" type="button">Import local CSV</button>
+      <a class="btn btn-quiet nav-button" href="./settings.html" aria-label="Open Settings and Help">Settings &amp; Help</a>
+      <button class="btn btn-primary" id="importButton" data-label="importButton" type="button">Import local CSV</button>
       <button class="btn" id="demoButton" type="button" hidden>Open invented demo</button>
       <button class="btn" id="signInButton" type="button">Sign in</button>
       <button class="btn btn-quiet" id="signOutButton" type="button" hidden>Sign out</button>
@@ -48,12 +50,12 @@
   <main id="workspace" class="workspace">
     <section class="inventory-panel panel" aria-labelledby="inventoryHeading">
       <div class="panel-header">
-        <div><p class="eyebrow">Inventory</p><h1 id="inventoryHeading">Resources &amp; facilities</h1></div>
+        <div><p class="eyebrow">Inventory</p><h1 id="inventoryHeading" data-label="inventoryHeading">Resources &amp; facilities</h1></div>
         <span class="count-badge"><span id="inventoryCount">0</span> shown</span>
       </div>
       <div class="tabs" role="tablist" aria-label="Inventory type">
-        <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel">Resources</button>
-        <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel">Facilities <span id="facilityCount" class="count-inline">0</span></button>
+        <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel"><span data-label="resourcesTab">Resources</span></button>
+        <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel"><span data-label="facilitiesTab">Facilities</span> <span id="facilityCount" class="count-inline">0</span></button>
       </div>
       <section id="resourcePanel" role="tabpanel" aria-labelledby="resourceTab" class="inventory-content">
         <div class="filters">

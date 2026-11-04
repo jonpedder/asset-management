@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
-const files = ["index.html", "oauth-callback.html", "config/app.json"];
+const files = ["index.html", "settings.html", "oauth-callback.html", "config/app.json"];
 const directories = ["src", "styles"];
 
 await rm(site, { recursive: true, force: true });
