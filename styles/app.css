@@ -52,6 +52,9 @@ button, input, select, summary, [tabindex] { outline-offset: 3px; }
 .btn-primary { background: var(--app-accent); color: #111; }
 .btn-primary:hover:not(:disabled) { background: var(--app-accent-strong); }
 .btn-quiet { border-color: var(--app-border); color: var(--app-muted); }
+.settings-cog-link { display: inline-flex; align-items: center; gap: .42rem; color: var(--app-text); }
+.settings-cog { width: 20px; height: 20px; flex: 0 0 auto; fill: currentColor; }
+.settings-cog-link:hover .settings-cog { color: var(--app-accent); }
 .status-strip { min-height: 40px; padding: .45rem 1rem; display: flex; align-items: center; gap: 1.2rem; background: var(--app-panel); border-bottom: 1px solid var(--app-border); color: var(--app-muted); font-size: .7rem; }
 .status-grow { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .operational-tag { color: var(--app-blue); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; white-space: nowrap; }
