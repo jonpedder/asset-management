@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OAuth callback</title></head>
+<body>
+  <p>Completing ArcGIS sign-in…</p>
+  <script>
+    if (window.opener?.oauthCallback) window.opener.oauthCallback(window.location.hash || window.location.search);
+    else if (window.opener) window.opener.postMessage({ type: "arcgis-oauth-callback", hash: window.location.hash, search: window.location.search }, window.location.origin);
+  </script>
+</body>
+</html>

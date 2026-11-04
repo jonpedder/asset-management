@@ -1,0 +1,26 @@
+{
+  "portalUrl": "https://publicsafety.maps.arcgis.com",
+  "featureServiceItemId": "6cca40eeed1d4fb39c0885f4ffd223f3",
+  "serviceUrl": "https://services6.arcgis.com/SdBwj74JF24xKhpX/arcgis/rest/services/Resource_Asset_Management_20261028/FeatureServer",
+  "layers": {
+    "resources": 0,
+    "facilities": 1
+  },
+  "oauth": {
+    "enabled": true,
+    "clientId": "2eURPxapfMdaZiS7",
+    "popupCallbackUrl": "https://jonpedder.github.io/resource-asset-management/oauth-callback.html"
+  },
+  "map": {
+    "basemap": "dark-gray-vector",
+    "center": {
+      "longitude": -122.3255,
+      "latitude": 37.5630
+    },
+    "zoom": 10
+  },
+  "import": {
+    "maxFileBytes": 10000000,
+    "privacyNote": "The selected file is parsed in memory in this browser only. It is not uploaded, persisted, or written to the feature service. Reloading clears the preview."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "asset-management",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static ArcGIS asset management operational inventory MVP",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "check": "npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
