@@ -16,10 +16,10 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   assert.match(html, /sessionStorage/); assert.match(html, /Expected columns/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
 });
 
-test("main page has no import dialog and places a visible settings cog after sign in", async () => {
+test("main page has no import dialog and places a square settings cog at the far right", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   assert.doesNotMatch(html, /id="importButton"/); assert.doesNotMatch(html, /id="importDialog"/); assert.doesNotMatch(html, /id="csvFile"/);
-  assert.match(html, /id="signInButton"[\s\S]*id="settingsLink"/); assert.match(html, /class="settings-cog"/); assert.match(html, /<span>Settings<\/span>/);
+  assert.match(html, /id="signInButton"[\s\S]*id="signOutButton"[\s\S]*id="settingsLink"/); assert.match(html, /class="settings-cog"/); assert.match(html, /class="sr-only">Settings<\/span>/);
 });
 
 test("main runtime loads config, consumes staged imports, and applies presentation", async () => {

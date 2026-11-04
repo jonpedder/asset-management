@@ -52,7 +52,7 @@ button, input, select, summary, [tabindex] { outline-offset: 3px; }
 .btn-primary { background: var(--app-accent); color: #111; }
 .btn-primary:hover:not(:disabled) { background: var(--app-accent-strong); }
 .btn-quiet { border-color: var(--app-border); color: var(--app-muted); }
-.settings-cog-link { display: inline-flex; align-items: center; gap: .42rem; color: var(--app-text); }
+.settings-cog-link { width: 40px; min-width: 40px; height: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--app-text); border: 1px solid var(--app-border); border-radius: 3px; }
 .settings-cog { width: 20px; height: 20px; flex: 0 0 auto; fill: currentColor; }
 .settings-cog-link:hover .settings-cog { color: var(--app-accent); }
 .status-strip { min-height: 40px; padding: .45rem 1rem; display: flex; align-items: center; gap: 1.2rem; background: var(--app-panel); border-bottom: 1px solid var(--app-border); color: var(--app-muted); font-size: .7rem; }
