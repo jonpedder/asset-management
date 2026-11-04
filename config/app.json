@@ -9,7 +9,9 @@
   "oauth": {
     "enabled": true,
     "clientId": "2eURPxapfMdaZiS7",
-    "popupCallbackUrl": "https://jonpedder.github.io/resource-asset-management/oauth-callback.html"
+    "mode": "redirect",
+    "redirectUrl": "https://jonpedder.github.io/asset-management/",
+    "popupCallbackUrl": "https://jonpedder.github.io/asset-management/oauth-callback.html"
   },
   "map": {
     "basemap": "dark-gray-vector",

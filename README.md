@@ -28,7 +28,7 @@ Opening `index.html` directly with `file://` is unsupported because modules and 
 
 ## Configuration
 
-Runtime public configuration is in `config/app.json`. The OAuth client ID is a public identifier, not a secret. Asset Management temporarily uses the already registered callback at `https://jonpedder.github.io/resource-asset-management/oauth-callback.html` because the portal currently rejects the dedicated Asset Management callback with `Invalid redirect_uri`. This does not modify the existing Resource & Asset Management application.
+Runtime public configuration is in `config/app.json`. The OAuth client ID is a public identifier, not a secret. Asset Management uses a full-page authorization-code redirect to the registered canonical URL `https://jonpedder.github.io/asset-management/`. This avoids popup/opener failures during Entra or ArcGIS sign-in. The dedicated callback remains registered for future popup use, but the current flow does not depend on it. The existing Resource & Asset Management application is not modified.
 
 The fallback center is configured to an approximate San Mateo County map center. It is used only to create clearly labeled deterministic mock points when no resource or facility geometry can be matched; it is not an operational asset location.
 
