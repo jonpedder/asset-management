@@ -7,7 +7,7 @@ const site = join(root, "site");
 const runtimeFiles = [
   "index.html", "settings.html", "oauth-callback.html", "config/app.json", "styles/app.css",
   "src/app.js", "src/auth.js", "src/config.js", "src/csv.js", "src/demo.js", "src/format.js",
-  "src/help-pdf.js", "src/import-session.js", "src/inventory-operations.js", "src/location.js", "src/map.js", "src/normalize.js", "src/asset-editing.js",
+  "src/help-pdf.js", "src/import-session.js", "src/inventory-operations.js", "src/location.js", "src/map.js", "src/normalize.js", "src/asset-editing.js", "src/facility-editing.js",
   "src/presentation.js", "src/service-data.js", "src/settings.js"
 ];
 

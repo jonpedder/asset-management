@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261105-1">
+  <link rel="stylesheet" href="./styles/app.css?v=20261106-1">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261105-1"></script>
+  <script type="module" src="./src/app.js?v=20261106-1"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -83,6 +83,7 @@
         </div>
       </section>
       <section id="facilityPanel" role="tabpanel" aria-labelledby="facilityTab" class="inventory-content" hidden>
+        <div class="facility-toolbar"><button id="addFacilityButton" class="btn btn-primary" type="button">Add facility</button><p>Creates a service feature only after validation and an explicit Save facility action.</p></div>
         <div class="table-wrap">
           <table>
             <caption class="sr-only">Facilities inventory</caption>
@@ -111,12 +112,15 @@
       <footer class="detail-footer">
         <span>Feature service item</span>
         <code id="serviceItemId">loading…</code>
-        <p>Facilities stay reference-only. Authorized asset edits occur only after an explicit Save or Apply facility action.</p>
+        <p>Authorized resource and facility writes occur only after explicit Save, Apply, or confirmed Remove actions supported by the target layer.</p>
       </footer>
     </aside>
   </main>
 
 
+  <dialog id="removeFacilityDialog" class="confirmation-dialog" aria-labelledby="removeFacilityTitle" aria-describedby="removeFacilityMessage">
+    <form method="dialog"><h2 id="removeFacilityTitle">Remove facility?</h2><p id="removeFacilityMessage"></p><p><strong>This service write is permanent.</strong></p><div class="dialog-actions"><button id="cancelRemoveFacility" class="btn btn-quiet" type="button">Cancel</button><button id="confirmRemoveFacility" class="btn btn-danger" type="button">Confirm removal</button></div></form>
+  </dialog>
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
 </body>
 </html>
