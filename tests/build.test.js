@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 test("runtime uses the required SDK loader and full-page OAuth redirect", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const auth = await readFile(new URL("../src/auth.js", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../styles/app.css", import.meta.url), "utf8");
   const config = JSON.parse(await readFile(new URL("../config/app.json", import.meta.url), "utf8"));
   assert.match(html, /<script type="module" src="https:\/\/js\.arcgis\.com\/5\.1\/"><\/script>/);
   assert.equal(config.oauth.clientId, "2eURPxapfMdaZiS7");
@@ -21,6 +22,9 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(html, /id="bulkContent"[^>]*hidden/);
   assert.ok(html.indexOf('id="bulkContent"') < html.indexOf('class="filters"'), "resource filters belong inside the collapsed bulk area");
   assert.ok(html.indexOf('class="filters"') < html.indexOf('id="bulkFacility"'), "filters appear before assignment controls");
+  assert.match(html, /class="bulk-arrow"[^>]*aria-hidden="true">▶<\/span>/);
+  assert.match(styles, /bulk-toggle\[aria-expanded="true"\] \.bulk-arrow\s*\{[^}]*rotate\(90deg\)/);
+  assert.match(styles, /help-card summary::before\s*\{[^}]*content: "▶"/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {
