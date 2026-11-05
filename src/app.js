@@ -194,14 +194,15 @@ function showDetail(id) {
   if (!record) return;
   state.selectedId = id;
   const isFacility = Boolean(record.name && !record.assetType);
+  const facilityAddress = isFacility ? extractFacilityAddress(record) : null;
   const attributes = Object.entries(record.attributes || {}).filter(([, value]) => value != null && String(value).trim()).slice(0, 12);
   elements.detail.innerHTML = `
     <div class="detail-hero">${sourceLabel(record)}<h2>${escapeHtml(record.assetType || record.name)}</h2><p>${escapeHtml(isFacility ? record.type : record.category || "Uncategorized")}</p>
       ${isFacility ? '<div class="detail-actions"><button class="btn detail-edit-action" id="editFacilityButton" type="button">Edit facility</button><button class="btn btn-danger" id="removeFacilityButton" type="button">Remove facility</button></div>' : '<button class="btn detail-edit-action" id="editAssetButton" type="button">Edit asset</button>'}</div>
     <dl class="detail-grid">
       <div><dt>Source</dt><dd>${escapeHtml(record.source)}</dd></div>
-      <div><dt>Location</dt><dd>${escapeHtml(record.locationMethod || (record.geometry ? "Service geometry" : "No geometry"))}${record.isMockLocation ? " (mock)" : ""}</dd></div>
-      ${isFacility ? `<div><dt>Status</dt><dd>${escapeHtml(record.status)}</dd></div><div><dt>Department</dt><dd>${escapeHtml(record.department || "Not provided")}</dd></div><div class="detail-wide"><dt>Address</dt><dd>${escapeHtml([record.address, record.city, record.state, record.zip].filter(Boolean).join(", ") || "Not provided")}</dd></div><div class="detail-wide"><dt>Location</dt><dd>${record.geometry ? "Service geometry available" : "No geometry"}</dd></div>` : `
+      ${isFacility ? "" : `<div><dt>Location</dt><dd>${escapeHtml(record.locationMethod || (record.geometry ? "Service geometry" : "No geometry"))}${record.isMockLocation ? " (mock)" : ""}</dd></div>`}
+      ${isFacility ? `<div><dt>Status</dt><dd>${escapeHtml(record.status)}</dd></div><div><dt>Department</dt><dd>${escapeHtml(record.department || "Not provided")}</dd></div><div class="detail-wide"><dt>Address</dt><dd>${escapeHtml([facilityAddress.address, facilityAddress.city, facilityAddress.state, facilityAddress.zip].filter(Boolean).join(", ") || "Not provided")}</dd></div><div class="detail-wide"><dt>Location</dt><dd>${record.geometry ? "Service geometry available" : "No geometry"}</dd></div>` : `
         <div><dt>Department</dt><dd>${escapeHtml(record.department || "Not provided")}</dd></div><div><dt>Quantity</dt><dd>${escapeHtml(record.quantity?.raw || "Not provided")}</dd></div>
         <div><dt>Status</dt><dd>${escapeHtml(record.status)}</dd></div><div><dt>Priority</dt><dd>${escapeHtml(record.priority || "Unspecified")}</dd></div>
         <div><dt>Operator</dt><dd>${escapeHtml(record.operator || "Unknown")}</dd></div><div><dt>Unit cost</dt><dd>${escapeHtml(formatCurrencyRange(record.unitCost))}</dd></div>
