@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 test("runtime uses the required SDK loader and full-page OAuth redirect", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const auth = await readFile(new URL("../src/auth.js", import.meta.url), "utf8");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   const styles = await readFile(new URL("../styles/app.css", import.meta.url), "utf8");
   const config = JSON.parse(await readFile(new URL("../config/app.json", import.meta.url), "utf8"));
   assert.match(html, /<script type="module" src="https:\/\/js\.arcgis\.com\/5\.1\/"><\/script>/);
@@ -14,6 +15,12 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.equal(config.oauth.popupCallbackUrl, "https://jonpedder.github.io/asset-management/oauth-callback.html");
   assert.match(auth, /popup:\s*!redirectMode/);
   assert.match(auth, /history\.replaceState/);
+  assert.match(auth, /@arcgis\/core\/portal\/Portal\.js/);
+  assert.match(auth, /getAuthenticatedUser/);
+  assert.match(html, /id="sessionChip"[^>]*role="status"[^>]*hidden/);
+  assert.match(html, /id="sessionUser">Not signed in<\/strong>/);
+  assert.match(app, /Authenticated · \$\{username\}/);
+  assert.match(app, /elements\.signInButton\.hidden = authenticated/);
   assert.equal(config.layers.resources, 0);
   assert.equal(config.layers.facilities, 1);
   assert.doesNotMatch(html, /Reported fleet benchmark/);

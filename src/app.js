@@ -2,7 +2,7 @@ import { assignLocations } from "./location.js";
 import { readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates } from "./import-session.js";
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
-import { initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js";
+import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js";
 import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
@@ -21,6 +21,7 @@ const state = {
   serviceAvailable: false,
   signedIn: false,
   oauthConfigured: false,
+  user: null,
   locationSummary: { resourceMatches: 0, facilityMatches: 0, mocked: 0, total: 0, coveragePercent: 0 },
   selectedId: null,
   inventoryType: "resources",
@@ -42,12 +43,26 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
+  ["systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
   elements.systemStatus.textContent = message;
   elements.systemStatus.dataset.tone = tone;
+}
+
+function presentSession(user = state.user) {
+  const authenticated = Boolean(state.signedIn);
+  const username = user?.username || user?.fullName || "Signed-in user";
+  state.user = authenticated ? user : null;
+  elements.sessionChip.hidden = !authenticated;
+  elements.sessionDot.classList.toggle("online", authenticated);
+  elements.sessionUser.textContent = authenticated ? username : "Not signed in";
+  elements.sessionState.textContent = authenticated ? "Authenticated" : "Authentication required";
+  elements.sessionChip.title = authenticated && user?.fullName && user.fullName !== username ? `${user.fullName} · Authenticated` : authenticated ? `${username} · Authenticated` : "Not signed in";
+  elements.signInButton.hidden = authenticated;
+  elements.signOutButton.hidden = !authenticated;
+  if (authenticated) elements.authStatus.textContent = `Authenticated · ${username}`;
 }
 
 function toast(message, tone = "info") {
@@ -650,8 +665,8 @@ function bindEvents() {
     try {
       await signIn();
       state.signedIn = true;
-      elements.authStatus.textContent = "Signed in";
-      elements.signOutButton.hidden = false;
+      state.user = await getAuthenticatedUser();
+      presentSession();
       await loadOperationalData();
     } catch (error) {
       toast(`Sign-in failed: ${error.message}`, "error");
@@ -804,9 +819,10 @@ async function main() {
     const auth = await initializeAuth(state.config);
     state.signedIn = auth.signedIn;
     state.oauthConfigured = auth.oauthConfigured;
-    elements.authStatus.textContent = auth.signedIn ? "Signed in session found" : auth.oauthConfigured ? "Not signed in · OAuth configured" : "OAuth not configured";
+    state.user = auth.user;
+    elements.authStatus.textContent = auth.signedIn ? "Authenticated session found" : auth.oauthConfigured ? "Not signed in · OAuth configured" : "OAuth not configured";
     elements.signInButton.disabled = !auth.oauthConfigured;
-    elements.signOutButton.hidden = !auth.signedIn;
+    presentSession();
     window.__app = {
       version: "1.2.0-facility-crud-map-placement",
       getState: () => ({ ...state, resources: [...state.resources], facilities: [...state.facilities], imported: [...state.imported] }),

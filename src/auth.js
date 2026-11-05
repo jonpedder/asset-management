@@ -2,6 +2,7 @@ let identityManager;
 let oauthInfo;
 let oauthRedirectUrl = "";
 let redirectMode = false;
+let activePortalUrl = "";
 
 export async function initializeAuth(config) {
   const [OAuthInfo, IdentityManager] = await $arcgis.import([
@@ -9,6 +10,7 @@ export async function initializeAuth(config) {
     "@arcgis/core/identity/IdentityManager.js"
   ]);
   identityManager = IdentityManager;
+  activePortalUrl = config.portalUrl.replace(/\/$/, "");
   redirectMode = config.oauth?.mode === "redirect";
   oauthRedirectUrl = config.oauth?.redirectUrl || "";
   if (config.oauth?.enabled && config.oauth?.clientId) {
@@ -30,7 +32,28 @@ export async function initializeAuth(config) {
       signedIn = false;
     }
   }
-  return { oauthConfigured: Boolean(oauthInfo), signedIn };
+  const user = signedIn ? await getAuthenticatedUser() : null;
+  return { oauthConfigured: Boolean(oauthInfo), signedIn, user };
+}
+
+export async function getAuthenticatedUser() {
+  if (!identityManager || !activePortalUrl) return null;
+  const credential = identityManager.findCredential(`${activePortalUrl}/sharing`);
+  try {
+    const [Portal] = await $arcgis.import(["@arcgis/core/portal/Portal.js"]);
+    const portal = new Portal({ url: activePortalUrl, authMode: "immediate" });
+    await portal.load();
+    if (portal.user?.load) await portal.user.load();
+    if (portal.user) {
+      return {
+        username: portal.user.username || credential?.userId || "",
+        fullName: portal.user.fullName || portal.user.username || credential?.userId || ""
+      };
+    }
+  } catch {
+    // The credential identity is still useful when profile metadata is unavailable.
+  }
+  return credential?.userId ? { username: credential.userId, fullName: credential.userId } : null;
 }
 
 export async function signIn() {

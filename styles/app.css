@@ -45,7 +45,13 @@ button, input, select, summary, [tabindex] { outline-offset: 3px; }
 .brand-mark { width: 42px; height: 42px; display: grid; place-items: center; border: 2px solid var(--app-accent); border-radius: 50%; color: var(--app-accent); font-weight: 800; }
 .brand strong, .brand small { display: block; }
 .brand small { margin-top: .2rem; color: var(--app-muted); font-size: .68rem; }
-.header-actions { margin-left: auto; display: flex; gap: .45rem; flex-wrap: wrap; }
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+.session-chip { min-height: 40px; display: flex; align-items: center; gap: .5rem; padding: .35rem .65rem; border-left: 1px solid var(--app-border); color: var(--app-muted); }
+.session-chip strong, .session-chip small { display: block; max-width: 180px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.session-chip strong { color: var(--app-text); font-size: .74rem; }
+.session-chip small { margin-top: .12rem; color: var(--app-green); font-size: .61rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.session-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--app-faint); }
+.session-dot.online { background: var(--app-green); box-shadow: 0 0 0 3px rgba(54,179,126,.14); }
 .btn { min-height: 38px; border: 1px solid var(--app-accent); border-radius: 3px; background: transparent; color: var(--app-accent); padding: .55rem .8rem; font-weight: 700; font-size: .78rem; cursor: pointer; }
 .btn:hover:not(:disabled) { background: var(--app-panel-2); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
