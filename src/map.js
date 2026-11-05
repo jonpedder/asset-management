@@ -21,23 +21,94 @@ const symbols = {
   placementPreview: { type: "simple-marker", style: "circle", size: 18, color: [242, 169, 0, 0.35], outline: { color: "#f2a900", width: 3 } }
 };
 
+function mapControl(label, text, action) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "map-control-button";
+  button.setAttribute("aria-label", label);
+  button.title = label;
+  button.textContent = text;
+  button.addEventListener("click", action);
+  return button;
+}
+
+function disclosureControl(label, text, panel) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "map-disclosure";
+  const button = mapControl(label, text, () => {
+    const expanded = button.getAttribute("aria-expanded") === "true";
+    button.setAttribute("aria-expanded", String(!expanded));
+    panel.hidden = expanded;
+  });
+  button.setAttribute("aria-expanded", "false");
+  panel.hidden = true;
+  wrapper.append(button, panel);
+  return wrapper;
+}
+
+function addMapControls() {
+  const homeViewpoint = view.viewpoint.clone();
+  const navigation = document.createElement("div");
+  navigation.className = "map-control-stack";
+  navigation.append(
+    mapControl("Zoom in", "+", () => view.goTo({ zoom: view.zoom + 1 }).catch(() => {})),
+    mapControl("Zoom out", "−", () => view.goTo({ zoom: view.zoom - 1 }).catch(() => {})),
+    mapControl("Home", "⌂", () => view.goTo(homeViewpoint).catch(() => {}))
+  );
+  view.ui.add(navigation, "top-left");
+
+  const tools = document.createElement("div");
+  tools.className = "map-control-stack map-tool-stack";
+  const legendPanel = document.createElement("section");
+  legendPanel.className = "map-control-panel";
+  const legendHeading = document.createElement("strong");
+  legendHeading.textContent = "Legend";
+  legendPanel.append(legendHeading);
+  const legendList = document.createElement("ul");
+  for (const layer of map.layers.filter((candidate) => candidate.listMode !== "hide")) {
+    const row = document.createElement("li");
+    const swatch = document.createElement("span");
+    swatch.className = "map-legend-swatch";
+    row.append(swatch, document.createTextNode(layer.title || "Map layer"));
+    legendList.append(row);
+  }
+  legendPanel.append(legendList);
+
+  const bookmarksPanel = document.createElement("section");
+  bookmarksPanel.className = "map-control-panel map-bookmarks-panel";
+  const bookmarksHeading = document.createElement("strong");
+  bookmarksHeading.textContent = "Bookmarks";
+  bookmarksPanel.append(bookmarksHeading);
+  const bookmarks = map.bookmarks ? [...map.bookmarks] : [];
+  if (bookmarks.length) {
+    for (const bookmark of bookmarks) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = bookmark.name || "Saved location";
+      button.addEventListener("click", () => view.goTo(bookmark.viewpoint || bookmark.extent).catch(() => {}));
+      bookmarksPanel.append(button);
+    }
+  } else {
+    const empty = document.createElement("span");
+    empty.textContent = "No saved bookmarks";
+    bookmarksPanel.append(empty);
+  }
+  tools.append(disclosureControl("Legend", "L", legendPanel), disclosureControl("Bookmarks", "B", bookmarksPanel));
+  view.ui.add(tools, "top-right");
+}
+
 export async function initializeMap(config, onSelect, options = {}) {
   if (config.resourceColors) {
     symbols.imported.color = config.resourceColors.imported || symbols.imported.color;
     symbols.mocked.color = config.resourceColors.mocked || symbols.mocked.color;
     symbols.demo.color = config.resourceColors.demo || symbols.demo.color;
   }
-  const [Map, WebMap, MapView, GraphicClass, GraphicsLayerClass, Legend, Bookmarks, Home, Zoom, Expand] = await $arcgis.import([
+  const [Map, WebMap, MapView, GraphicClass, GraphicsLayerClass] = await $arcgis.import([
     "@arcgis/core/Map.js",
     "@arcgis/core/WebMap.js",
     "@arcgis/core/views/MapView.js",
     "@arcgis/core/Graphic.js",
-    "@arcgis/core/layers/GraphicsLayer.js",
-    "@arcgis/core/widgets/Legend.js",
-    "@arcgis/core/widgets/Bookmarks.js",
-    "@arcgis/core/widgets/Home.js",
-    "@arcgis/core/widgets/Zoom.js",
-    "@arcgis/core/widgets/Expand.js"
+    "@arcgis/core/layers/GraphicsLayer.js"
   ]);
   Graphic = GraphicClass;
   GraphicsLayer = GraphicsLayerClass;
@@ -65,10 +136,7 @@ export async function initializeMap(config, onSelect, options = {}) {
   }
   view = new MapView(viewOptions);
   await view.when();
-  view.ui.add(new Zoom({ view }), "top-left");
-  view.ui.add(new Home({ view }), "top-left");
-  view.ui.add(new Expand({ view, content: new Legend({ view }), expandTooltip: "Legend", group: "top-right" }), "top-right");
-  view.ui.add(new Expand({ view, content: new Bookmarks({ view, editingEnabled: false }), expandTooltip: "Bookmarks", group: "top-right" }), "top-right");
+  addMapControls();
   view.on("click", async (event) => {
     if (pointSelection) {
       const active = pointSelection;
