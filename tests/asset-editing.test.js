@@ -66,6 +66,7 @@ test("detail form and applyEdits source keep explicit gating and mockable SDK ca
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert.match(app, /id="editAssetButton"/);
   assert.match(app, /id="assetEditForm"/);
+  assert.match(app, /const form = event\.target/);
   assert.match(app, /Existing facility/);
   assert.match(app, /Given address/);
   assert.match(app, /serviceEditGate\(\{ signedIn: state\.signedIn/);
