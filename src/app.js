@@ -225,7 +225,7 @@ async function geocodeEditor(forStorage = false) {
 }
 async function saveAssetEdit(event) {
   event.preventDefault();
-  const record = recordById(state.selectedId); const form = event.currentTarget; const values = formValues(form);
+  const record = recordById(state.selectedId); const form = event.target; const values = formValues(form);
   if (!form.reportValidity()) return;
   const submit = form.querySelector('[type="submit"]'); submit.disabled = true; setEditorStatus("Validating changes…");
   try {
