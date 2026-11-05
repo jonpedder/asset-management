@@ -1,6 +1,7 @@
 import { assignLocations } from "./location.js";
-import { readImportSession, updateImportSessionRecord } from "./import-session.js";
+import { readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates } from "./import-session.js";
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
+import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js";
 import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord } from "./map.js";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
@@ -26,14 +27,16 @@ const state = {
   facilityLayer: null,
   editGeometry: null,
   editLocationMode: "current",
-  geocodePreview: null
+  geocodePreview: null,
+  selectedResourceIds: new Set(),
+  visibleResourceIds: []
 };
 
 const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "resourceRows", "facilityRows", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "locationSummary", "lastUpdated", "mapMessage", "toastRegion"].forEach((id) => { elements[id] = byId(id); });
+  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "locationSummary", "lastUpdated", "mapMessage", "toastRegion"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -102,20 +105,61 @@ function sourceLabel(record) {
   return '<span class="source-pill source-import">IMPORTED · MATCHED</span>';
 }
 
+function currentResourceFilters() {
+  return { search: elements.resourceSearch.value, source: elements.sourceFilter.value, facility: elements.facilityFilter.value, city: elements.cityFilter.value, zip: elements.zipFilter.value };
+}
+function refreshFacilityControls() {
+  const filterValue = elements.facilityFilter.value;
+  const bulkValue = elements.bulkFacility.value;
+  const filterOptions = facilityFilterOptions(currentFacilities(), allResourceRecords());
+  elements.facilityFilter.innerHTML = '<option value="">All facilities</option>' + filterOptions.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("");
+  if ([...elements.facilityFilter.options].some((option) => option.value === filterValue)) elements.facilityFilter.value = filterValue;
+  elements.bulkFacility.innerHTML = '<option value="">Choose a facility</option>' + currentFacilities().map((facility) => `<option value="${escapeHtml(facility.id)}">${escapeHtml(facility.name)}${facility.sourceType === "demo" ? " (invented demo)" : ""}</option>`).join("");
+  if ([...elements.bulkFacility.options].some((option) => option.value === bulkValue)) elements.bulkFacility.value = bulkValue;
+}
+function selectedResourceRecords() {
+  const selected = state.selectedResourceIds;
+  return allResourceRecords().filter((record) => selected.has(record.id));
+}
+function updateBulkControls() {
+  const selected = selectedResourceRecords();
+  const facility = currentFacilities().find((item) => item.id === elements.bulkFacility.value);
+  elements.selectedCount.textContent = `${selected.length} asset${selected.length === 1 ? "" : "s"} selected`;
+  if (facility) {
+    const address = extractFacilityAddress(facility);
+    elements.bulkPreview.textContent = `Will copy ${[address.name, address.address, address.city, address.state, address.zip].filter(Boolean).join(", ") || "facility name"}; ${address.geometry ? "geometry included" : "no usable geometry"}.`;
+  } else elements.bulkPreview.textContent = "Select assets and a facility. Nothing is saved until Apply facility is clicked.";
+  try {
+    const plan = planBulkFacilityAssignment({ selectedRecords: selected, facility, signedIn: state.signedIn, layer: state.resourceLayer });
+    elements.applyBulkFacility.disabled = false;
+    elements.applyBulkFacility.title = plan.geometryOnly ? "Only geometry can be stored because no editable location fields were bound." : "Apply this facility to selected assets";
+    elements.bulkStatus.textContent = plan.geometryOnly ? "Ready. Service assignment will store geometry only; facility/address text is not stored by this layer." : "Ready to apply after explicit confirmation.";
+  } catch (error) {
+    elements.applyBulkFacility.disabled = true;
+    elements.applyBulkFacility.title = error.message;
+    elements.bulkStatus.textContent = error.message;
+  }
+}
 function renderResources() {
-  const search = elements.resourceSearch.value.trim().toLowerCase();
-  const source = elements.sourceFilter.value;
-  const records = allResourceRecords().filter((record) => {
-    const haystack = [record.assetType, record.department, record.category, record.status, record.source].join(" ").toLowerCase();
-    return (!search || haystack.includes(search)) && (!source || record.sourceType === source);
-  });
+  const allRecords = allResourceRecords();
+  state.selectedResourceIds = cleanSelectedIds(state.selectedResourceIds, allRecords);
+  const filters = currentResourceFilters();
+  const records = filterResourceRecords(allRecords, filters);
+  state.visibleResourceIds = records.map((record) => record.id);
   elements.inventoryCount.textContent = records.length;
+  const active = [["search", filters.search], ["source", filters.source], ["facility", filters.facility], ["city", filters.city], ["ZIP", filters.zip]].filter(([, value]) => String(value).trim());
+  elements.activeFilters.textContent = active.length ? `Active filters: ${active.map(([name, value]) => `${name} “${value}”`).join(" · ")}` : "No inventory filters active.";
+  const visibleSelected = records.filter((record) => state.selectedResourceIds.has(record.id)).length;
+  elements.selectAllVisible.checked = records.length > 0 && visibleSelected === records.length;
+  elements.selectAllVisible.indeterminate = visibleSelected > 0 && visibleSelected < records.length;
   if (!records.length) {
-    elements.resourceRows.innerHTML = '<tr><td colspan="6" class="empty-cell">No inventory records match the current filters.</td></tr>';
+    elements.resourceRows.innerHTML = '<tr><td colspan="7" class="empty-cell">No inventory records match the current filters.</td></tr>';
+    updateBulkControls();
     return;
   }
   elements.resourceRows.innerHTML = records.map((record) => `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.assetType)} details">
+      <td class="select-column"><input class="resource-select" type="checkbox" data-select-id="${escapeHtml(record.id)}" ${state.selectedResourceIds.has(record.id) ? "checked" : ""} aria-label="Select ${escapeHtml(record.assetType)} for bulk actions"></td>
       <td><strong>${escapeHtml(record.assetType)}</strong><span class="mobile-meta">${escapeHtml(record.department || "No department")}</span></td>
       <td>${escapeHtml(record.department || "—")}</td>
       <td>${escapeHtml(record.category || "—")}</td>
@@ -123,6 +167,7 @@ function renderResources() {
       <td><span class="status status-${escapeHtml((record.status || "unknown").toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(record.status || "Unknown")}</span></td>
       <td>${sourceLabel(record)}</td>
     </tr>`).join("");
+  updateBulkControls();
 }
 
 function renderFacilities() {
@@ -260,6 +305,57 @@ async function saveAssetEdit(event) {
   } catch (error) { setEditorStatus(error.message, "error"); submit.disabled = false; }
 }
 
+async function refreshUpdatedServiceRecords(objectIds) {
+  if (!objectIds.length) return;
+  state.resourceLayer.refresh();
+  const refreshed = await state.resourceLayer.queryFeatures({ objectIds, outFields: ["*"], returnGeometry: true, outSpatialReference: { wkid: 4326 } });
+  for (const feature of refreshed.features || []) {
+    const updated = resourceFromFeature(feature, 0, state.resourceLayer.fields, state.resourceLayer.objectIdField);
+    const index = state.resources.findIndex((record) => record.objectId === updated.objectId);
+    if (index >= 0) state.resources[index] = updated;
+  }
+}
+
+async function applyBulkFacility() {
+  const facility = currentFacilities().find((item) => item.id === elements.bulkFacility.value);
+  let plan;
+  try {
+    plan = planBulkFacilityAssignment({ selectedRecords: selectedResourceRecords(), facility, signedIn: state.signedIn, layer: state.resourceLayer });
+  } catch (error) {
+    elements.bulkStatus.textContent = error.message;
+    return;
+  }
+  elements.applyBulkFacility.disabled = true;
+  elements.bulkStatus.textContent = "Validating and applying assignment…";
+  try {
+    if (plan.importedIds.length) validateImportSessionRecordUpdates(plan.importedIds, plan.assignment);
+    if (plan.serviceFeatures.length) {
+      const result = await state.resourceLayer.applyEdits({ updateFeatures: plan.serviceFeatures });
+      const summary = summarizeServiceUpdateResults(result, plan.serviceRecords);
+      await refreshUpdatedServiceRecords(summary.successfulObjectIds);
+      if (summary.failureCount) {
+        const details = summary.failures.map((failure) => `${failure.objectId ?? failure.id}: ${failure.message}`).join("; ");
+        throw new Error(`Service batch partially completed: ${summary.successCount} succeeded, ${summary.failureCount} failed. Imported assets were not changed. ${details}`);
+      }
+    }
+    if (plan.importedIds.length) {
+      state.stagedImport = updateImportSessionRecords(plan.importedIds, plan.assignment);
+      consumeStagedImport();
+    }
+    renderAll();
+    if (state.selectedId && recordById(state.selectedId)) showDetail(state.selectedId);
+    const textBoundary = plan.geometryOnly ? " Service facility/address text was not stored because the layer has no editable bound location fields." : "";
+    const message = `Facility assigned to ${plan.serviceFeatures.length + plan.importedIds.length} selected asset${plan.serviceFeatures.length + plan.importedIds.length === 1 ? "" : "s"}.${textBoundary}`;
+    elements.bulkStatus.textContent = message;
+    toast(message, "success");
+  } catch (error) {
+    consumeStagedImport();
+    renderAll();
+    elements.bulkStatus.textContent = error.message;
+    toast(error.message, "error");
+  }
+}
+
 function setInventoryType(type) {
   state.inventoryType = type;
   const resources = type === "resources";
@@ -272,6 +368,7 @@ function setInventoryType(type) {
 }
 
 function renderAll() {
+  refreshFacilityControls();
   renderResources();
   renderFacilities();
   updateMetrics();
@@ -385,10 +482,29 @@ function bindEvents() {
   });
   elements.resourceSearch.addEventListener("input", renderResources);
   elements.sourceFilter.addEventListener("change", renderResources);
+  elements.facilityFilter.addEventListener("change", renderResources);
+  elements.cityFilter.addEventListener("input", renderResources);
+  elements.zipFilter.addEventListener("input", renderResources);
+  elements.clearFilters.addEventListener("click", () => {
+    elements.resourceSearch.value = ""; elements.sourceFilter.value = ""; elements.facilityFilter.value = ""; elements.cityFilter.value = ""; elements.zipFilter.value = ""; renderResources();
+  });
+  elements.bulkFacility.addEventListener("change", updateBulkControls);
+  elements.applyBulkFacility.addEventListener("click", applyBulkFacility);
+  elements.selectAllVisible.addEventListener("change", () => {
+    for (const id of state.visibleResourceIds) elements.selectAllVisible.checked ? state.selectedResourceIds.add(id) : state.selectedResourceIds.delete(id);
+    renderResources();
+  });
+  elements.resourceRows.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-select-id]");
+    if (!checkbox) return;
+    checkbox.checked ? state.selectedResourceIds.add(checkbox.dataset.selectId) : state.selectedResourceIds.delete(checkbox.dataset.selectId);
+    renderResources();
+  });
   elements.mockedToggle.addEventListener("change", () => setMockedVisible(elements.mockedToggle.checked));
   elements.resourceTab.addEventListener("click", () => setInventoryType("resources"));
   elements.facilityTab.addEventListener("click", () => setInventoryType("facilities"));
   const activateRow = (event) => {
+    if (event.target.closest("input, button, select, label")) return;
     const row = event.target.closest("tr[data-record-id]");
     if (!row || (event.type === "keydown" && !["Enter", " "].includes(event.key))) return;
     if (event.type === "keydown") event.preventDefault();
@@ -443,7 +559,7 @@ async function main() {
     elements.signInButton.disabled = !auth.oauthConfigured;
     elements.signOutButton.hidden = !auth.signedIn;
     window.__app = {
-      version: "1.0.0-mvp",
+      version: "1.1.0-inventory-bulk",
       getState: () => ({ ...state, resources: [...state.resources], facilities: [...state.facilities], imported: [...state.imported] }),
       loadOperationalData,
       showDetail,

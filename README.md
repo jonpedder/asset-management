@@ -7,7 +7,8 @@ Static operational resource and facility inventory with browser-local CSV stagin
 - ArcGIS Maps SDK for JavaScript 5.1 CDN with `$arcgis.import`
 - Anonymous service access attempt plus optional full-page ArcGIS OAuth redirect sign-in
 - Editable Resources (layer 0) when authorized and supported; Facilities (layer 1) remain reference-only
-- Accessible inventory table, search, details, map selection, and source provenance
+- Accessible inventory table with combined search/source/facility/city/ZIP filters, persistent checkbox selection, details, map selection, and source provenance
+- Explicit bulk facility assignment for imported and authorized service assets; one service `applyEdits` batch, partial-result reporting, and no facility edits
 - Robust local CSV parsing and normalization; no CSV upload or persistence
 - Location hierarchy: current resource match, facility match, deterministic mocked county point
 - Distinct imported/mocked symbology and mocked-point visibility control
@@ -36,7 +37,7 @@ The fallback center is configured to an approximate San Mateo County map center.
 
 ## Privacy and data safety
 
-Import begins in Settings. CSV text is parsed locally and discarded; normalized records and imported edits remain in `sessionStorage` for the current tab/session. Imports are not bulk geocoded or uploaded. Separately, a signed-in operator can explicitly save a current resource only when the FeatureLayer reports update support and the feature has an object ID. Saves use `FeatureLayer.applyEdits`; Facilities are never editable. Address geocoding and service saves can consume services or credits and require permission.
+Import begins in Settings. CSV text is parsed locally and discarded; normalized records and imported edits, including bulk facility assignment, remain in `sessionStorage` for the current tab/session. Imports are not bulk geocoded or uploaded. A signed-in operator can explicitly save or bulk-assign current resources only when the FeatureLayer reports update support and every selected feature has an object ID. Bulk service updates use one `FeatureLayer.applyEdits` batch and report partial results; mixed selections change imports only after complete service success. Facilities are never editable. Address geocoding and service saves can consume services or credits and require permission.
 
 ## Build and deployment
 
