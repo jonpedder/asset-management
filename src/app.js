@@ -2,13 +2,13 @@ import { assignLocations } from "./location.js";
 import { readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates } from "./import-session.js";
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
-import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js";
+import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js?v=20261106-3";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
-import { loadConfig } from "./config.js";
+import { loadConfig } from "./config.js?v=20261106-3";
 import { applyPresentation } from "./presentation.js";
 
 const state = {
