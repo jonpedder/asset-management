@@ -1,6 +1,7 @@
 {
   "portalUrl": "https://publicsafety.maps.arcgis.com",
   "featureServiceItemId": "6cca40eeed1d4fb39c0885f4ffd223f3",
+  "webMapItemId": "4cf195324bbb4c65b4defe7ae4b935bc",
   "serviceUrl": "https://services6.arcgis.com/SdBwj74JF24xKhpX/arcgis/rest/services/Resource_Asset_Management_20261028/FeatureServer",
   "layers": { "resources": 0, "facilities": 1 },
   "oauth": {

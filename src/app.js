@@ -814,8 +814,6 @@ async function main() {
     state.stagedImport = readImportSession();
     elements.sourceFilter.value = state.config.operatorDefaults?.defaultSourceFilter || "";
     elements.mockedToggle.checked = state.config.operatorDefaults?.showMockedPoints !== false;
-    await initializeMap(state.config, showDetail);
-    setMockedVisible(elements.mockedToggle.checked);
     const auth = await initializeAuth(state.config);
     state.signedIn = auth.signedIn;
     state.oauthConfigured = auth.oauthConfigured;
@@ -823,6 +821,8 @@ async function main() {
     elements.authStatus.textContent = auth.signedIn ? "Authenticated session found" : auth.oauthConfigured ? "Not signed in · OAuth configured" : "OAuth not configured";
     elements.signInButton.disabled = !auth.oauthConfigured;
     presentSession();
+    await initializeMap(state.config, showDetail, { authenticated: state.signedIn });
+    setMockedVisible(elements.mockedToggle.checked);
     window.__app = {
       version: "1.2.0-facility-crud-map-placement",
       getState: () => ({ ...state, resources: [...state.resources], facilities: [...state.facilities], imported: [...state.imported] }),

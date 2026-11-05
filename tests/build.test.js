@@ -21,6 +21,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(html, /id="sessionUser">Not signed in<\/strong>/);
   assert.match(app, /Authenticated · \$\{username\}/);
   assert.match(app, /elements\.signInButton\.hidden = authenticated/);
+  assert.equal(config.webMapItemId, "4cf195324bbb4c65b4defe7ae4b935bc");
   assert.equal(config.layers.resources, 0);
   assert.equal(config.layers.facilities, 1);
   assert.doesNotMatch(html, /Reported fleet benchmark/);

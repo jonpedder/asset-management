@@ -97,6 +97,9 @@ test("facility runtime has three SDK applyEdits shapes, confirmation, mocks, and
   assert.match(app, /id="addNewFacilityButton"/);
   assert.match(map, /popupTemplate = servicePopupTemplate/);
   assert.match(map, /buttonEnabled: true/);
+  assert.match(map, /@arcgis\/core\/WebMap\.js/);
+  for (const widget of ["Legend", "Bookmarks", "Home", "Zoom", "Expand"]) assert.match(map, new RegExp(`@arcgis/core/widgets/${widget}\\.js`));
+  assert.match(map, /portalItem: \{ id: config\.webMapItemId/);
   assert.doesNotMatch(app, /\bfetch\s*\(/);
   assert.doesNotMatch(map, /\bfetch\s*\(/);
 });

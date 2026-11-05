@@ -21,36 +21,54 @@ const symbols = {
   placementPreview: { type: "simple-marker", style: "circle", size: 18, color: [242, 169, 0, 0.35], outline: { color: "#f2a900", width: 3 } }
 };
 
-export async function initializeMap(config, onSelect) {
+export async function initializeMap(config, onSelect, options = {}) {
   if (config.resourceColors) {
     symbols.imported.color = config.resourceColors.imported || symbols.imported.color;
     symbols.mocked.color = config.resourceColors.mocked || symbols.mocked.color;
     symbols.demo.color = config.resourceColors.demo || symbols.demo.color;
   }
-  const [Map, MapView, GraphicClass, GraphicsLayerClass] = await $arcgis.import([
+  const [Map, WebMap, MapView, GraphicClass, GraphicsLayerClass, Legend, Bookmarks, Home, Zoom, Expand] = await $arcgis.import([
     "@arcgis/core/Map.js",
+    "@arcgis/core/WebMap.js",
     "@arcgis/core/views/MapView.js",
     "@arcgis/core/Graphic.js",
-    "@arcgis/core/layers/GraphicsLayer.js"
+    "@arcgis/core/layers/GraphicsLayer.js",
+    "@arcgis/core/widgets/Legend.js",
+    "@arcgis/core/widgets/Bookmarks.js",
+    "@arcgis/core/widgets/Home.js",
+    "@arcgis/core/widgets/Zoom.js",
+    "@arcgis/core/widgets/Expand.js"
   ]);
   Graphic = GraphicClass;
   GraphicsLayer = GraphicsLayerClass;
   selectHandler = onSelect;
-  map = new Map({ basemap: config.map.basemap });
+  const useWebMap = Boolean(options.authenticated && config.webMapItemId);
+  map = useWebMap
+    ? new WebMap({ portalItem: { id: config.webMapItemId, portal: { url: config.portalUrl } } })
+    : new Map({ basemap: config.map.basemap });
+  if (useWebMap) await map.load();
   importedLayer = new GraphicsLayer({ id: "imported-validated", title: "Imported — validated location" });
   mockedLayer = new GraphicsLayer({ id: "imported-mocked", title: "Imported — mocked location" });
   demoLayer = new GraphicsLayer({ id: "invented-demo", title: "Invented demo data" });
   placementPreviewLayer = new GraphicsLayer({ id: "facility-placement-preview", title: "Unsaved facility placement preview", listMode: "hide" });
   map.addMany([demoLayer, importedLayer, mockedLayer, placementPreviewLayer]);
-  view = new MapView({
+  const viewOptions = {
     container: "mapView",
     map,
-    center: [config.map.center.longitude, config.map.center.latitude],
-    zoom: config.map.zoom,
     constraints: { snapToZoom: false },
+    ui: { components: ["attribution"] },
     popup: { dockEnabled: true, dockOptions: { position: "bottom-right", buttonEnabled: true, breakpoint: false } }
-  });
+  };
+  if (!useWebMap) {
+    viewOptions.center = [config.map.center.longitude, config.map.center.latitude];
+    viewOptions.zoom = config.map.zoom;
+  }
+  view = new MapView(viewOptions);
   await view.when();
+  view.ui.add(new Zoom({ view }), "top-left");
+  view.ui.add(new Home({ view }), "top-left");
+  view.ui.add(new Expand({ view, content: new Legend({ view }), expandTooltip: "Legend", group: "top-right" }), "top-right");
+  view.ui.add(new Expand({ view, content: new Bookmarks({ view, editingEnabled: false }), expandTooltip: "Bookmarks", group: "top-right" }), "top-right");
   view.on("click", async (event) => {
     if (pointSelection) {
       const active = pointSelection;
@@ -114,34 +132,42 @@ function servicePopupTemplate(layer, kind) {
 
 export async function addServiceLayers(config) {
   const FeatureLayer = await $arcgis.import("@arcgis/core/layers/FeatureLayer.js");
-  removeServiceLayers();
-  const resourceLayer = new FeatureLayer({
-    id: "resources",
-    title: "Resources",
-    url: `${config.serviceUrl}/${config.layers.resources}`,
-    outFields: ["*"],
-    popupEnabled: true
-  });
-  const facilityLayer = new FeatureLayer({
-    id: "facilities",
-    title: "Facilities",
-    url: `${config.serviceUrl}/${config.layers.facilities}`,
-    outFields: ["*"],
-    popupEnabled: true
-  });
-  map.addMany([facilityLayer, resourceLayer], 0);
+  const findWebMapLayer = (title, layerIndex) => map.layers.find((layer) => layer.title === title || Number(layer.layerId) === Number(layerIndex));
+  let resourceLayer = findWebMapLayer("Resources", config.layers.resources);
+  let facilityLayer = findWebMapLayer("Facilities", config.layers.facilities);
+  const layersToAdd = [];
+  if (!resourceLayer) {
+    resourceLayer = new FeatureLayer({
+      id: "resources",
+      title: "Resources",
+      url: `${config.serviceUrl}/${config.layers.resources}`,
+      outFields: ["*"],
+      popupEnabled: true
+    });
+    layersToAdd.push(resourceLayer);
+  }
+  if (!facilityLayer) {
+    facilityLayer = new FeatureLayer({
+      id: "facilities",
+      title: "Facilities",
+      url: `${config.serviceUrl}/${config.layers.facilities}`,
+      outFields: ["*"],
+      popupEnabled: true
+    });
+    layersToAdd.push(facilityLayer);
+  }
+  if (layersToAdd.length) map.addMany(layersToAdd, 0);
   await Promise.all([resourceLayer.load(), facilityLayer.load()]);
+  resourceLayer.outFields = ["*"];
+  facilityLayer.outFields = ["*"];
+  resourceLayer.popupEnabled = true;
+  facilityLayer.popupEnabled = true;
   resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
   facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
   serviceLayers = [resourceLayer, facilityLayer];
   window.__esriLayers.Resources = resourceLayer;
   window.__esriLayers.Facilities = facilityLayer;
   return { resourceLayer, facilityLayer };
-}
-
-function removeServiceLayers() {
-  serviceLayers.forEach((layer) => map?.remove(layer));
-  serviceLayers = [];
 }
 
 function graphicFor(record, symbol) {

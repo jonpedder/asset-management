@@ -6,7 +6,7 @@ function storage() {
   const values = new Map();
   return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key), values };
 }
-const base = { portalUrl: "https://example.com", featureServiceItemId: "a".repeat(32), serviceUrl: "https://example.com/FeatureServer", layers: { resources: 0, facilities: 1 }, oauth: { enabled: true, clientId: "public-id", mode: "redirect", redirectUrl: "https://example.com/app/" }, map: { basemap: "dark-gray-vector", center: { longitude: -120, latitude: 37 }, zoom: 9 }, import: { maxFileBytes: 1000000 } };
+const base = { portalUrl: "https://example.com", featureServiceItemId: "a".repeat(32), webMapItemId: "b".repeat(32), serviceUrl: "https://example.com/FeatureServer", layers: { resources: 0, facilities: 1 }, oauth: { enabled: true, clientId: "public-id", mode: "redirect", redirectUrl: "https://example.com/app/" }, map: { basemap: "dark-gray-vector", center: { longitude: -120, latitude: 37 }, zoom: 9 }, import: { maxFileBytes: 1000000 } };
 
 test("config merge preserves nested deployment values and applies safe overrides", () => {
   const merged = mergeConfig(base, { map: { zoom: 12 }, oauth: { clientId: "other-public-id" }, token: "no", clientSecret: "no" });
