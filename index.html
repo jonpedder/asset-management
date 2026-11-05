@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261106-2">
+  <link rel="stylesheet" href="./styles/app.css?v=20261106-3">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261106-7"></script>
+  <script type="module" src="./src/app.js?v=20261106-8"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -103,9 +103,15 @@
     </section>
 
     <section class="map-panel" aria-label="Operational map">
-      <div id="mapView"></div>
+      <arcgis-map id="mapView">
+        <arcgis-zoom slot="top-left"></arcgis-zoom>
+        <arcgis-home slot="top-left"></arcgis-home>
+        <arcgis-expand slot="top-right" expand-icon="basemap" expand-tooltip="Basemaps"><arcgis-basemap-gallery></arcgis-basemap-gallery></arcgis-expand>
+        <arcgis-expand slot="top-right" expand-icon="layers" expand-tooltip="Layers"><arcgis-layer-list></arcgis-layer-list></arcgis-expand>
+        <arcgis-expand slot="top-right" expand-icon="legend" expand-tooltip="Legend"><arcgis-legend></arcgis-legend></arcgis-expand>
+        <arcgis-expand slot="top-right" expand-icon="bookmark" expand-tooltip="Bookmarks"><arcgis-bookmarks></arcgis-bookmarks></arcgis-expand>
+      </arcgis-map>
       <div id="mapMessage" class="map-message" role="status"><strong>Preparing map</strong><span>Loading ArcGIS Maps SDK for JavaScript 5.1…</span></div>
-      <div class="map-legend" aria-label="Map legend"><span><i class="dot current"></i>Current</span><span><i class="dot imported"></i>Imported matched</span><span><i class="dot mocked"></i>Imported mocked</span><span><i class="dot demo"></i>Invented demo</span></div>
     </section>
 
     <aside class="detail-panel panel" aria-labelledby="detailHeading">

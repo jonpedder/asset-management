@@ -97,14 +97,13 @@ test("facility runtime has three SDK applyEdits shapes, confirmation, mocks, and
   assert.match(app, /id="addNewFacilityButton"/);
   assert.match(map, /popupTemplate = servicePopupTemplate/);
   assert.match(map, /buttonEnabled: true/);
-  assert.match(map, /@arcgis\/core\/WebMap\.js/);
-  assert.match(map, /portalItem: \{ id: config\.webMapItemId/);
+  assert.match(map, /mapElement\.itemId = config\.webMapItemId/);
+  assert.match(map, /await mapElement\.viewOnReady\(\)/);
+  for (const component of ["arcgis-map", "arcgis-zoom", "arcgis-home", "arcgis-basemap-gallery", "arcgis-layer-list", "arcgis-legend", "arcgis-bookmarks"]) assert.match(html, new RegExp(`<${component}`));
   assert.match(map, /await view\.goTo\(\{ target: record\.geometry/);
   assert.match(map, /await view\.openPopup\(\{ features: \[feature\]/);
   assert.match(map, /objectIds: \[record\.objectId\]/);
-  for (const label of ["Home", "Legend", "Bookmarks"]) assert.match(map, new RegExp(`\\"${label}\\"`));
-  assert.match(map, /default ArcGIS UI provides the Zoom in and Zoom out buttons/);
-  assert.doesNotMatch(map, /@arcgis\/core\/widgets\//);
+  assert.doesNotMatch(map, /map-control-button|@arcgis\/core\/widgets\//);
   assert.doesNotMatch(app, /\bfetch\s*\(/);
   assert.doesNotMatch(map, /\bfetch\s*\(/);
 });

@@ -21,89 +21,13 @@ const symbols = {
   placementPreview: { type: "simple-marker", style: "circle", size: 18, color: [242, 169, 0, 0.35], outline: { color: "#f2a900", width: 3 } }
 };
 
-function mapControl(label, text, action) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "map-control-button";
-  button.setAttribute("aria-label", label);
-  button.title = label;
-  button.textContent = text;
-  button.addEventListener("click", action);
-  return button;
-}
-
-function disclosureControl(label, text, panel) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "map-disclosure";
-  const button = mapControl(label, text, () => {
-    const expanded = button.getAttribute("aria-expanded") === "true";
-    button.setAttribute("aria-expanded", String(!expanded));
-    panel.hidden = expanded;
-  });
-  button.setAttribute("aria-expanded", "false");
-  panel.hidden = true;
-  wrapper.append(button, panel);
-  return wrapper;
-}
-
-function addMapControls() {
-  const homeViewpoint = view.viewpoint.clone();
-  const navigation = document.createElement("div");
-  navigation.className = "map-control-stack";
-  // MapView's default ArcGIS UI provides the Zoom in and Zoom out buttons.
-  navigation.append(mapControl("Home", "⌂", () => view.goTo(homeViewpoint).catch(() => {})));
-  view.ui.add(navigation, "top-left");
-
-  const tools = document.createElement("div");
-  tools.className = "map-control-stack map-tool-stack";
-  const legendPanel = document.createElement("section");
-  legendPanel.className = "map-control-panel";
-  const legendHeading = document.createElement("strong");
-  legendHeading.textContent = "Legend";
-  legendPanel.append(legendHeading);
-  const legendList = document.createElement("ul");
-  for (const layer of map.layers.filter((candidate) => candidate.listMode !== "hide")) {
-    const row = document.createElement("li");
-    const swatch = document.createElement("span");
-    swatch.className = "map-legend-swatch";
-    row.append(swatch, document.createTextNode(layer.title || "Map layer"));
-    legendList.append(row);
-  }
-  legendPanel.append(legendList);
-
-  const bookmarksPanel = document.createElement("section");
-  bookmarksPanel.className = "map-control-panel map-bookmarks-panel";
-  const bookmarksHeading = document.createElement("strong");
-  bookmarksHeading.textContent = "Bookmarks";
-  bookmarksPanel.append(bookmarksHeading);
-  const bookmarks = map.bookmarks ? [...map.bookmarks] : [];
-  if (bookmarks.length) {
-    for (const bookmark of bookmarks) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = bookmark.name || "Saved location";
-      button.addEventListener("click", () => view.goTo(bookmark.viewpoint || bookmark.extent).catch(() => {}));
-      bookmarksPanel.append(button);
-    }
-  } else {
-    const empty = document.createElement("span");
-    empty.textContent = "No saved bookmarks";
-    bookmarksPanel.append(empty);
-  }
-  tools.append(disclosureControl("Legend", "L", legendPanel), disclosureControl("Bookmarks", "B", bookmarksPanel));
-  view.ui.add(tools, "top-right");
-}
-
 export async function initializeMap(config, onSelect, options = {}) {
   if (config.resourceColors) {
     symbols.imported.color = config.resourceColors.imported || symbols.imported.color;
     symbols.mocked.color = config.resourceColors.mocked || symbols.mocked.color;
     symbols.demo.color = config.resourceColors.demo || symbols.demo.color;
   }
-  const [Map, WebMap, MapView, GraphicClass, GraphicsLayerClass] = await $arcgis.import([
-    "@arcgis/core/Map.js",
-    "@arcgis/core/WebMap.js",
-    "@arcgis/core/views/MapView.js",
+  const [GraphicClass, GraphicsLayerClass] = await $arcgis.import([
     "@arcgis/core/Graphic.js",
     "@arcgis/core/layers/GraphicsLayer.js"
   ]);
@@ -111,28 +35,25 @@ export async function initializeMap(config, onSelect, options = {}) {
   GraphicsLayer = GraphicsLayerClass;
   selectHandler = onSelect;
   const useWebMap = Boolean(options.authenticated && config.webMapItemId);
-  map = useWebMap
-    ? new WebMap({ portalItem: { id: config.webMapItemId, portal: { url: config.portalUrl } } })
-    : new Map({ basemap: config.map.basemap });
-  if (useWebMap) await map.load();
+  const mapElement = document.getElementById("mapView");
+  if (useWebMap) {
+    mapElement.itemId = config.webMapItemId;
+  } else {
+    mapElement.basemap = config.map.basemap;
+    mapElement.center = `${config.map.center.longitude},${config.map.center.latitude}`;
+    mapElement.zoom = config.map.zoom;
+  }
+  await mapElement.viewOnReady();
+  view = mapElement.view;
+  map = mapElement.map;
+  view.constraints.snapToZoom = false;
+  view.popup.dockEnabled = true;
+  view.popup.dockOptions = { position: "bottom-right", buttonEnabled: true, breakpoint: false };
   importedLayer = new GraphicsLayer({ id: "imported-validated", title: "Imported — validated location" });
   mockedLayer = new GraphicsLayer({ id: "imported-mocked", title: "Imported — mocked location" });
   demoLayer = new GraphicsLayer({ id: "invented-demo", title: "Invented demo data" });
   placementPreviewLayer = new GraphicsLayer({ id: "facility-placement-preview", title: "Unsaved facility placement preview", listMode: "hide" });
   map.addMany([demoLayer, importedLayer, mockedLayer, placementPreviewLayer]);
-  const viewOptions = {
-    container: "mapView",
-    map,
-    constraints: { snapToZoom: false },
-    popup: { dockEnabled: true, dockOptions: { position: "bottom-right", buttonEnabled: true, breakpoint: false } }
-  };
-  if (!useWebMap) {
-    viewOptions.center = [config.map.center.longitude, config.map.center.latitude];
-    viewOptions.zoom = config.map.zoom;
-  }
-  view = new MapView(viewOptions);
-  await view.when();
-  addMapControls();
   view.on("click", async (event) => {
     if (pointSelection) {
       const active = pointSelection;
@@ -158,6 +79,7 @@ export async function initializeMap(config, onSelect, options = {}) {
   });
   window.__esriView = view;
   window.__esriMap = map;
+  window.__esriMapElement = mapElement;
   window.__esriLayers = { imported: importedLayer, mocked: mockedLayer, demo: demoLayer, facilityPlacementPreview: placementPreviewLayer };
   return { map, view };
 }
