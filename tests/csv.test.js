@@ -31,7 +31,8 @@ test("extractor preserves the 32-row customer draft behavior", () => {
 test("automatic mapping uses exact normalized aliases for documented headings", () => {
   const inspection = inspectCsv(`${headers}\nGenerator,Public Works,Power,2,Ready,Backup,Yes,Operational,None,High,$100,Memo`);
   assert.equal(inspection.headerRow, 1);
-  assert.deepEqual(Object.values(inspection.suggestedMapping), Array.from({ length: 12 }, (_, index) => index));
+  assert.deepEqual(Object.values(inspection.suggestedMapping).slice(0, 12), Array.from({ length: 12 }, (_, index) => index));
+  assert.ok(Object.values(inspection.suggestedMapping).slice(12).every((value) => value === null));
   const result = mapCsvRecords(inspection, inspection.suggestedMapping);
   assert.equal(result.records[0].assetType, "Generator");
   assert.equal(result.records[0].quantity, "2");
@@ -42,8 +43,16 @@ test("explicit mapping supports arbitrary custom headings", () => {
   const result = mapCsvRecords(inspection, { assetType: 0, department: 1, quantity: 2, notes: 3 });
   assert.deepEqual(result.records[0], {
     assetType: "Portable pump", department: "Utilities", category: "", quantity: "7", availability: "",
-    eocRole: "", operator: "", status: "", gapDescription: "", priority: "", unitCost: "", notes: "Trailer mounted"
+    eocRole: "", operator: "", status: "", gapDescription: "", priority: "", unitCost: "", notes: "Trailer mounted",
+    locationName: "", address: "", city: "", state: "", zip: "", facility: ""
   });
+});
+
+test("CSV aliases map and serialize location and facility fields", () => {
+  const inspection = inspectCsv("Asset,Site name,Street address,Municipality,Region,Postal Code,Facility\nPump,South Yard,1 Water Way,Bayside,CA,94000,South Yard");
+  const result = mapCsvRecords(inspection, inspection.suggestedMapping).records[0];
+  assert.deepEqual({ locationName: result.locationName, address: result.address, city: result.city, state: result.state, zip: result.zip, facility: result.facility },
+    { locationName: "South Yard", address: "1 Water Way", city: "Bayside", state: "CA", zip: "94000", facility: "South Yard" });
 });
 
 test("mapping requires Asset Type and rejects duplicate source assignments", () => {

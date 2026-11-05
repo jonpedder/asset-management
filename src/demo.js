@@ -5,6 +5,6 @@ export const DEMO_RESOURCES = [
 ];
 
 export const DEMO_FACILITIES = [
-  { id: "demo-facility-1", name: "North Operations Center", type: "Operations", status: "Open", geometry: { type: "point", longitude: -122.402, latitude: 37.655 }, source: "Invented demo data", sourceType: "demo" },
-  { id: "demo-facility-2", name: "Community Staging Site", type: "Staging", status: "Standby", geometry: { type: "point", longitude: -122.245, latitude: 37.450 }, source: "Invented demo data", sourceType: "demo" }
+  { id: "demo-facility-1", name: "North Operations Center", type: "Operations", status: "Open", geometry: { type: "point", longitude: -122.402, latitude: 37.655 }, attributes: { Address: "100 Demo Operations Way", City: "Sample City", State: "CA", ZIP: "94000" }, source: "Invented demo data", sourceType: "demo" },
+  { id: "demo-facility-2", name: "Community Staging Site", type: "Staging", status: "Standby", geometry: { type: "point", longitude: -122.245, latitude: 37.450 }, attributes: { Address: "250 Example Staging Road", City: "Sample City", State: "CA", ZIP: "94001" }, source: "Invented demo data", sourceType: "demo" }
 ];

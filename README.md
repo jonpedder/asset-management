@@ -1,12 +1,12 @@
 # Asset Management
 
-First-release static MVP for read-only operational resource and facility inventory, mapping, and browser-local CSV preview.
+Static operational resource and facility inventory with browser-local CSV staging and carefully gated asset editing.
 
 ## Features
 
 - ArcGIS Maps SDK for JavaScript 5.1 CDN with `$arcgis.import`
-- Anonymous service access attempt plus optional ArcGIS OAuth popup sign-in
-- Read-only Resources (layer 0) and Facilities (layer 1) inventory and geometry
+- Anonymous service access attempt plus optional full-page ArcGIS OAuth redirect sign-in
+- Editable Resources (layer 0) when authorized and supported; Facilities (layer 1) remain reference-only
 - Accessible inventory table, search, details, map selection, and source provenance
 - Robust local CSV parsing and normalization; no CSV upload or persistence
 - Location hierarchy: current resource match, facility match, deterministic mocked county point
@@ -36,7 +36,7 @@ The fallback center is configured to an approximate San Mateo County map center.
 
 ## Privacy and data safety
 
-The application implements no feature-service edits. Import begins in Settings. CSV text is parsed locally and discarded; only normalized records are staged in `sessionStorage` for the current tab/session so they survive navigation to the map. They are cleared explicitly or when the browser session ends. No import uses `localStorage`, the repository, or a service. `.gitignore` excludes CSV files, and the source draft is not included.
+Import begins in Settings. CSV text is parsed locally and discarded; normalized records and imported edits remain in `sessionStorage` for the current tab/session. Imports are not bulk geocoded or uploaded. Separately, a signed-in operator can explicitly save a current resource only when the FeatureLayer reports update support and the feature has an object ID. Saves use `FeatureLayer.applyEdits`; Facilities are never editable. Address geocoding and service saves can consume services or credits and require permission.
 
 ## Build and deployment
 

@@ -35,7 +35,7 @@ test("main page has no import dialog and places a square settings cog at the far
 
 test("main runtime loads config, consumes staged imports, and applies presentation", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
-  assert.match(app, /import \{ readImportSession \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
+  assert.match(app, /import \{ readImportSession, updateImportSessionRecord \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
   assert.doesNotMatch(app, /importButton|importDialog|importForm|csvFile/);
 });

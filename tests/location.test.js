@@ -18,6 +18,18 @@ test("location hierarchy uses resource, facility, then deterministic mock", () =
   assert.equal(result.records[2].isMockLocation, true);
 });
 
+test("requested facility wins and unmatched address is preserved without hidden geocoding", () => {
+  const namedFacility = { name: "County EOC", attributes: { Address: "100 Main", City: "Bayside", State: "CA", ZIP: "94000" }, geometry: { type: "point", longitude: -92, latitude: 42 } };
+  const requested = assignLocations([{ ...records[0], facility: "County EOC", address: "old" }], resources, [namedFacility]);
+  assert.equal(requested.records[0].locationName, "County EOC");
+  assert.equal(requested.records[0].address, "100 Main");
+  assert.equal(requested.records[0].isMockLocation, false);
+  const unmatched = assignLocations([{ ...records[0], facility: "Missing", address: "9 Unknown" }], resources, [namedFacility]);
+  assert.equal(unmatched.records[0].address, "9 Unknown");
+  assert.equal(unmatched.records[0].isMockLocation, true);
+  assert.match(unmatched.records[0].locationMethod, /Address retained/);
+});
+
 test("mock points are deterministic and one per input record", () => {
   assert.deepEqual(deterministicCountyPoint(records[2]), deterministicCountyPoint(records[2]));
   const result = assignLocations([{ ...records[2], quantity: { estimate: 1000 } }], [], []);
