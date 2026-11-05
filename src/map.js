@@ -5,14 +5,17 @@ let map;
 let importedLayer;
 let mockedLayer;
 let demoLayer;
+let placementPreviewLayer;
 let serviceLayers = [];
 let selectHandler = () => {};
+let pointSelection = null;
 
 const symbols = {
   imported: { type: "simple-marker", style: "circle", size: 10, color: "#f2a900", outline: { color: "#071824", width: 1.5 } },
   mocked: { type: "simple-marker", style: "x", size: 12, color: "#ff6b6b", outline: { color: "#ffdadf", width: 1 } },
   demo: { type: "simple-marker", style: "diamond", size: 11, color: "#8bd3ff", outline: { color: "#071824", width: 1.5 } },
-  demoFacility: { type: "simple-marker", style: "square", size: 13, color: "#36b37e", outline: { color: "#071824", width: 1.5 } }
+  demoFacility: { type: "simple-marker", style: "square", size: 13, color: "#36b37e", outline: { color: "#071824", width: 1.5 } },
+  placementPreview: { type: "simple-marker", style: "circle", size: 18, color: [242, 169, 0, 0.35], outline: { color: "#f2a900", width: 3 } }
 };
 
 export async function initializeMap(config, onSelect) {
@@ -34,7 +37,8 @@ export async function initializeMap(config, onSelect) {
   importedLayer = new GraphicsLayer({ id: "imported-validated", title: "Imported — validated location" });
   mockedLayer = new GraphicsLayer({ id: "imported-mocked", title: "Imported — mocked location" });
   demoLayer = new GraphicsLayer({ id: "invented-demo", title: "Invented demo data" });
-  map.addMany([demoLayer, importedLayer, mockedLayer]);
+  placementPreviewLayer = new GraphicsLayer({ id: "facility-placement-preview", title: "Unsaved facility placement preview", listMode: "hide" });
+  map.addMany([demoLayer, importedLayer, mockedLayer, placementPreviewLayer]);
   view = new MapView({
     container: "mapView",
     map,
@@ -45,6 +49,14 @@ export async function initializeMap(config, onSelect) {
   });
   await view.when();
   view.on("click", async (event) => {
+    if (pointSelection) {
+      const active = pointSelection;
+      pointSelection = null;
+      view.container?.classList.remove("map-pick-active");
+      setPlacementPreview(event.mapPoint);
+      active.resolve(event.mapPoint);
+      return;
+    }
     const response = await view.hitTest(event);
     const hit = response.results.find((result) => result.graphic?.attributes);
     if (!hit) return;
@@ -61,7 +73,7 @@ export async function initializeMap(config, onSelect) {
   });
   window.__esriView = view;
   window.__esriMap = map;
-  window.__esriLayers = { imported: importedLayer, mocked: mockedLayer, demo: demoLayer };
+  window.__esriLayers = { imported: importedLayer, mocked: mockedLayer, demo: demoLayer, facilityPlacementPreview: placementPreviewLayer };
   return { map, view };
 }
 
@@ -133,6 +145,31 @@ export function clearDemo() {
 
 export function setMockedVisible(visible) {
   if (mockedLayer) mockedLayer.visible = visible;
+}
+
+export function setPlacementPreview(geometry) {
+  placementPreviewLayer?.removeAll();
+  if (geometry) placementPreviewLayer?.add(new Graphic({ geometry, symbol: symbols.placementPreview, attributes: { preview: true } }));
+}
+
+export function clearPlacementPreview() {
+  placementPreviewLayer?.removeAll();
+}
+
+export function cancelPointSelection(reason = "Map placement was canceled.") {
+  if (!pointSelection) return false;
+  const active = pointSelection;
+  pointSelection = null;
+  view?.container?.classList.remove("map-pick-active");
+  active.reject(new Error(reason));
+  return true;
+}
+
+export function startPointSelection() {
+  cancelPointSelection("A new map placement replaced the previous selection.");
+  if (!view) return Promise.reject(new Error("The map is not ready."));
+  view.container?.classList.add("map-pick-active");
+  return new Promise((resolve, reject) => { pointSelection = { resolve, reject }; });
 }
 
 export function focusRecord(record) {

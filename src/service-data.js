@@ -1,5 +1,6 @@
 import { cleanText, normalizeStatus, parseRange } from "./normalize.js";
 import { inferFieldBindings } from "./asset-editing.js";
+import { inferFacilityBindings } from "./facility-editing.js";
 
 function bound(attributes, bindings, key) { const name = bindings?.[key]; return name ? attributes?.[name] ?? "" : ""; }
 function objectIdFrom(feature, objectIdField, index, allowDisplayFallback = true) {
@@ -35,14 +36,17 @@ function valueByHints(attributes, hints) {
   return "";
 }
 export function facilityFromFeature(feature, index = 0, objectIdField = "OBJECTID", fields = []) {
-  const attributes = feature.attributes ?? {}; const objectId = objectIdFrom(feature, objectIdField, index);
+  const attributes = feature.attributes ?? {}; const objectId = objectIdFrom(feature, objectIdField, index, false);
+  const bindings = inferFacilityBindings(fields.length ? fields : Object.keys(attributes).map((name) => ({ name, alias: name, type: "string", editable: true })), objectIdField);
+  const value = (key, hints = []) => bindings[key] ? attributes[bindings[key]] : valueByHints(attributes, hints);
   return {
-    id: `service-facility-${objectId}`, objectId,
-    name: cleanText(valueByHints(attributes, [/facility.*name/i, /site.*name/i, /^name$/i, /title/i])) || `Facility ${index + 1}`,
-    type: cleanText(valueByHints(attributes, [/facility.*type/i, /^type$/i, /category/i])) || "Facility",
-    status: cleanText(valueByHints(attributes, [/status/i, /condition/i])) || "Unknown",
-    department: cleanText(valueByHints(attributes, [/department/i, /dept/i, /agency/i, /owner/i])),
-    geometry: feature.geometry, source: "Current feature service", sourceType: "service", attributes,
+    id: objectId == null ? `service-facility-row-${index + 1}` : `service-facility-${objectId}`, objectId,
+    name: cleanText(value("name", [/facility.*name/i, /site.*name/i, /^name$/i, /title/i])) || `Facility ${index + 1}`,
+    type: cleanText(value("type", [/facility.*type/i, /^type$/i, /category/i])) || "Facility",
+    status: cleanText(value("status", [/status/i, /condition/i])) || "Unknown",
+    department: cleanText(value("department", [/department/i, /dept/i, /agency/i, /owner/i])),
+    address: cleanText(value("address")), city: cleanText(value("city")), state: cleanText(value("state")), zip: cleanText(value("zip")), notes: cleanText(value("notes")),
+    geometry: feature.geometry, source: "Current feature service", sourceType: "service", attributes, fieldBindings: bindings,
     fieldAliases: Object.fromEntries(fields.map((field) => [field.name, field.alias || field.name]))
   };
 }

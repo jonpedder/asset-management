@@ -2,7 +2,7 @@
 
 ## Current service records
 
-Resources and Facilities retain the complete ArcGIS attributes object and geometry. A display adapter uses case-insensitive field-name hints for names, department, category, quantity, and status because the runtime service schema may evolve. Current metrics remain separate from imported estimates.
+Resources and Facilities retain the complete ArcGIS attributes object and geometry. A display adapter uses conservative field-name/alias inference because the runtime service schema may evolve. Facility forms normalize name, type, status, department, address, city, state, ZIP, and notes while exposing remaining editable, non-system fields under Additional attributes. Updates preserve untouched attributes; creates validate all editable service-required fields. Current metrics remain separate from imported estimates.
 
 ## Imported preview records
 

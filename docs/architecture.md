@@ -22,7 +22,7 @@ Required diagnostics globals are exposed after map initialization:
 5. Load/query layers only when anonymous or authenticated access succeeds.
 6. Offer sign-in and invented demo mode when service access fails.
 
-The only service write path is an explicit resource update through the loaded SDK `FeatureLayer.applyEdits`. Bulk assignment validates every selected source, service capability/object ID, conservatively bound editable location fields, and facility geometry before making one `updateFeatures` batch. For mixed selections, the service batch runs before one strict `sessionStorage` import update; any reported service failure prevents the import update, while ArcGIS may still have accepted some service features. Facilities are never edited. There is no raw REST/fetch/token write path, add/delete/upload path, or auto-save.
+Every service write uses the loaded SDK `FeatureLayer.applyEdits` after an explicit action. Resource editing and bulk assignment use `updateFeatures`. Facility creation, update, and confirmed removal use exactly one `addFeatures`, `updateFeatures`, or `deleteFeatures` payload respectively, with sign-in, capability, schema, object-ID, required-field, and geometry gates. Facility deletion refreshes choices but never mutates asset features. Address preview uses `forStorage=false`, then save repeats with `forStorage=true`; one-shot map points remain previews until save. There is no raw REST/fetch/token write path, upload path, or auto-save.
 
 ## Build boundary
 
