@@ -50,11 +50,8 @@ function addMapControls() {
   const homeViewpoint = view.viewpoint.clone();
   const navigation = document.createElement("div");
   navigation.className = "map-control-stack";
-  navigation.append(
-    mapControl("Zoom in", "+", () => view.goTo({ zoom: view.zoom + 1 }).catch(() => {})),
-    mapControl("Zoom out", "−", () => view.goTo({ zoom: view.zoom - 1 }).catch(() => {})),
-    mapControl("Home", "⌂", () => view.goTo(homeViewpoint).catch(() => {}))
-  );
+  // MapView's default ArcGIS UI provides the Zoom in and Zoom out buttons.
+  navigation.append(mapControl("Home", "⌂", () => view.goTo(homeViewpoint).catch(() => {})));
   view.ui.add(navigation, "top-left");
 
   const tools = document.createElement("div");

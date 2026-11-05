@@ -3,7 +3,7 @@ import { readImportSession, updateImportSessionRecord, updateImportSessionRecord
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js?v=20261106-5";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js?v=20261106-6";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";

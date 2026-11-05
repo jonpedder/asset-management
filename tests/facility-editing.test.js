@@ -99,7 +99,8 @@ test("facility runtime has three SDK applyEdits shapes, confirmation, mocks, and
   assert.match(map, /buttonEnabled: true/);
   assert.match(map, /@arcgis\/core\/WebMap\.js/);
   assert.match(map, /portalItem: \{ id: config\.webMapItemId/);
-  for (const label of ["Zoom in", "Zoom out", "Home", "Legend", "Bookmarks"]) assert.match(map, new RegExp(`\\"${label}\\"`));
+  for (const label of ["Home", "Legend", "Bookmarks"]) assert.match(map, new RegExp(`\\"${label}\\"`));
+  assert.match(map, /default ArcGIS UI provides the Zoom in and Zoom out buttons/);
   assert.doesNotMatch(map, /@arcgis\/core\/widgets\//);
   assert.doesNotMatch(app, /\bfetch\s*\(/);
   assert.doesNotMatch(map, /\bfetch\s*\(/);
