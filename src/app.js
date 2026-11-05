@@ -203,7 +203,7 @@ function showAssetEditor() {
     <div id="editValidation" class="form-status" role="alert"></div><div class="editor-actions"><button class="btn" type="submit" ${gate.allowed ? "" : "disabled"}>Save changes</button><button class="btn btn-quiet" type="button" id="cancelAssetEdit2">Cancel</button></div>
   </form>`;
 }
-function formValues(form) { return Object.fromEntries([...form.elements].filter((element) => element.name && element.name !== "locationMode").map((element) => [element.name, element.value])); }
+function formValues(form) { return Object.fromEntries(Array.from(form.elements).filter((element) => element.name && element.name !== "locationMode").map((element) => [element.name, element.value])); }
 function setEditorStatus(message, tone = "") { const node = byId("editValidation"); if (node) { node.textContent = message; node.dataset.tone = tone; } }
 async function locatorUrl() {
   if (state.config.geocoderUrl) return state.config.geocoderUrl;
