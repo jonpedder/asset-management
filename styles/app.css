@@ -101,6 +101,8 @@ input[type="search"], input[type="file"], select { width: 100%; min-height: 36px
 .bulk-arrow { color: var(--app-accent); font-size: 1.1rem; transition: transform .15s ease; }
 .bulk-toggle[aria-expanded="true"] .bulk-arrow { transform: rotate(180deg); }
 .bulk-content { display: grid; grid-template-columns: minmax(180px,1fr) auto; gap: .55rem; align-items: end; padding: 0 .7rem .65rem; }
+.bulk-content[hidden] { display: none; }
+.bulk-content > .filters { grid-column: 1 / -1; margin: 0 -.7rem; padding: .55rem .7rem; border-top: 1px solid var(--app-border); border-bottom: 1px solid var(--app-border); }
 .bulk-preview, .bulk-status { grid-column: 1 / -1; margin: 0; line-height: 1.4; }
 .bulk-status { color: var(--app-accent); }
 .select-column { width: 42px; text-align: center; }

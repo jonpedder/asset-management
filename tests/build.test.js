@@ -19,6 +19,8 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.doesNotMatch(html, />Location validation</);
   assert.match(html, /id="bulkToggle"[^>]*aria-expanded="false"/);
   assert.match(html, /id="bulkContent"[^>]*hidden/);
+  assert.ok(html.indexOf('id="bulkContent"') < html.indexOf('class="filters"'), "resource filters belong inside the collapsed bulk area");
+  assert.ok(html.indexOf('class="filters"') < html.indexOf('id="bulkFacility"'), "filters appear before assignment controls");
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {

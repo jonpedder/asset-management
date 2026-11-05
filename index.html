@@ -56,22 +56,22 @@
         <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel"><span data-label="facilitiesTab">Facilities</span> <span id="facilityCount" class="count-inline">0</span></button>
       </div>
       <section id="resourcePanel" role="tabpanel" aria-labelledby="resourceTab" class="inventory-content">
-        <div class="filters">
-          <label><span>Search inventory</span><input id="resourceSearch" type="search" placeholder="Asset, department, category…" autocomplete="off"></label>
-          <label><span>Source</span><select id="sourceFilter"><option value="">All sources</option><option value="service">Current service</option><option value="import">Imported preview</option><option value="demo">Invented demo</option></select></label>
-          <label><span>Facility</span><select id="facilityFilter"><option value="">All facilities</option></select></label>
-          <label><span>City contains</span><input id="cityFilter" type="search" autocomplete="off" placeholder="All cities"></label>
-          <label><span>ZIP contains</span><input id="zipFilter" type="search" inputmode="numeric" autocomplete="postal-code" placeholder="All ZIPs"></label>
-          <button id="clearFilters" class="btn btn-quiet filter-clear" type="button">Clear filters</button>
-          <label class="toggle"><input id="mockedToggle" type="checkbox" checked><span>Show mocked import points</span></label>
-          <p id="activeFilters" class="active-filters" role="status">No inventory filters active.</p>
-        </div>
         <section class="bulk-toolbar" aria-labelledby="bulkHeading">
           <button id="bulkToggle" class="bulk-toggle" type="button" aria-expanded="false" aria-controls="bulkContent">
-            <span><strong id="bulkHeading">Bulk facility assignment</strong><small id="selectedCount">0 assets selected</small></span>
+            <span><strong id="bulkHeading">Bulk facility assignment</strong><small id="selectedCount">0 assets selected · filters and assignment controls</small></span>
             <span class="bulk-arrow" aria-hidden="true">⌄</span>
           </button>
           <div id="bulkContent" class="bulk-content" hidden>
+            <div class="filters">
+              <label><span>Search inventory</span><input id="resourceSearch" type="search" placeholder="Asset, department, category…" autocomplete="off"></label>
+              <label><span>Source</span><select id="sourceFilter"><option value="">All sources</option><option value="service">Current service</option><option value="import">Imported preview</option><option value="demo">Invented demo</option></select></label>
+              <label><span>Facility</span><select id="facilityFilter"><option value="">All facilities</option></select></label>
+              <label><span>City contains</span><input id="cityFilter" type="search" autocomplete="off" placeholder="All cities"></label>
+              <label><span>ZIP contains</span><input id="zipFilter" type="search" inputmode="numeric" autocomplete="postal-code" placeholder="All ZIPs"></label>
+              <button id="clearFilters" class="btn btn-quiet filter-clear" type="button">Clear filters</button>
+              <label class="toggle"><input id="mockedToggle" type="checkbox" checked><span>Show mocked import points</span></label>
+              <p id="activeFilters" class="active-filters" role="status">No inventory filters active.</p>
+            </div>
             <label><span>Loaded facility</span><select id="bulkFacility"><option value="">Choose a facility</option></select></label>
             <button id="applyBulkFacility" class="btn btn-primary equal-action" type="button" disabled>Apply facility</button>
             <p id="bulkPreview" class="bulk-preview">Select assets and a facility. Nothing is saved until Apply facility is clicked.</p>

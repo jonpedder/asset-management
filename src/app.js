@@ -127,7 +127,7 @@ function selectedResourceRecords() {
 function updateBulkControls() {
   const selected = selectedResourceRecords();
   const facility = currentFacilities().find((item) => item.id === elements.bulkFacility.value);
-  elements.selectedCount.textContent = `${selected.length} asset${selected.length === 1 ? "" : "s"} selected`;
+  elements.selectedCount.textContent = `${selected.length} asset${selected.length === 1 ? "" : "s"} selected · filters included`;
   if (facility) {
     const address = extractFacilityAddress(facility);
     elements.bulkPreview.textContent = `Will copy ${[address.name, address.address, address.city, address.state, address.zip].filter(Boolean).join(", ") || "facility name"}; ${address.geometry ? "geometry included" : "no usable geometry"}.`;
