@@ -15,6 +15,10 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(auth, /history\.replaceState/);
   assert.equal(config.layers.resources, 0);
   assert.equal(config.layers.facilities, 1);
+  assert.doesNotMatch(html, /Reported fleet benchmark/);
+  assert.doesNotMatch(html, />Location validation</);
+  assert.match(html, /id="bulkToggle"[^>]*aria-expanded="false"/);
+  assert.match(html, /id="bulkContent"[^>]*hidden/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {

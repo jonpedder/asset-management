@@ -93,6 +93,10 @@ test("facility runtime has three SDK applyEdits shapes, confirmation, mocks, and
   assert.match(html, /Confirm removal/);
   assert.match(app, /startPointSelection/);
   assert.match(app, /addressToLocations/);
+  assert.match(app, /id="locateFacilityDevice"/);
+  assert.match(app, /id="addNewFacilityButton"/);
+  assert.match(map, /popupTemplate = servicePopupTemplate/);
+  assert.match(map, /buttonEnabled: true/);
   assert.doesNotMatch(app, /\bfetch\s*\(/);
   assert.doesNotMatch(map, /\bfetch\s*\(/);
 });

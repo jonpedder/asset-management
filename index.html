@@ -43,7 +43,6 @@
     <article><span>Imported records</span><strong id="importedRecords">0</strong><small>Browser-local preview</small></article>
     <article><span>Imported est. qty</span><strong id="importedQuantity">0</strong><small>Minimum–maximum range</small></article>
     <article><span>Location coverage</span><strong id="coverageMetric">0%</strong><small>Matched geometry, not accuracy</small></article>
-    <article class="benchmark"><span>Reported fleet benchmark</span><strong>1,465</strong><small>Unverified · never added to current totals</small></article>
   </section>
 
   <main id="workspace" class="workspace">
@@ -68,11 +67,16 @@
           <p id="activeFilters" class="active-filters" role="status">No inventory filters active.</p>
         </div>
         <section class="bulk-toolbar" aria-labelledby="bulkHeading">
-          <div><strong id="bulkHeading">Bulk facility assignment</strong><span id="selectedCount">0 assets selected</span></div>
-          <label><span>Loaded facility</span><select id="bulkFacility"><option value="">Choose a facility</option></select></label>
-          <button id="applyBulkFacility" class="btn btn-primary" type="button" disabled>Apply facility</button>
-          <p id="bulkPreview" class="bulk-preview">Select assets and a facility. Nothing is saved until Apply facility is clicked.</p>
-          <p id="bulkStatus" class="bulk-status" role="status" aria-live="polite"></p>
+          <button id="bulkToggle" class="bulk-toggle" type="button" aria-expanded="false" aria-controls="bulkContent">
+            <span><strong id="bulkHeading">Bulk facility assignment</strong><small id="selectedCount">0 assets selected</small></span>
+            <span class="bulk-arrow" aria-hidden="true">⌄</span>
+          </button>
+          <div id="bulkContent" class="bulk-content" hidden>
+            <label><span>Loaded facility</span><select id="bulkFacility"><option value="">Choose a facility</option></select></label>
+            <button id="applyBulkFacility" class="btn btn-primary equal-action" type="button" disabled>Apply facility</button>
+            <p id="bulkPreview" class="bulk-preview">Select assets and a facility. Nothing is saved until Apply facility is clicked.</p>
+            <p id="bulkStatus" class="bulk-status" role="status" aria-live="polite"></p>
+          </div>
         </section>
         <div class="table-wrap">
           <table>
@@ -102,10 +106,6 @@
 
     <aside class="detail-panel panel" aria-labelledby="detailHeading">
       <div class="panel-header"><div><p class="eyebrow">Selection</p><h2 id="detailHeading">Inventory detail</h2></div></div>
-      <div class="validation-card">
-        <strong>Location validation</strong>
-        <p id="locationSummary">Stage a CSV in Settings to run location validation.</p>
-      </div>
       <div id="detail" class="detail-scroll">
         <div class="empty-state"><span aria-hidden="true">⌖</span><strong>Select a record</strong><p>Choose a table row or imported map point to inspect source, quantity, and location provenance.</p></div>
       </div>

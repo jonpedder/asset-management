@@ -69,7 +69,11 @@ test("detail form and applyEdits source keep explicit gating and mockable SDK ca
   assert.match(app, /const form = event\.target/);
   assert.match(app, /Array\.from\(form\.elements\)/);
   assert.match(app, /Existing facility/);
-  assert.match(app, /Given address/);
+  assert.match(app, /Enter and locate an address/);
+  assert.match(app, /id="pickAssetPoint"/);
+  assert.match(app, /id="locateAssetDevice"/);
+  assert.match(app, /navigator\.geolocation\.getCurrentPosition/);
+  assert.match(app, /system fields remain intentionally read-only/);
   assert.match(app, /serviceEditGate\(\{ signedIn: state\.signedIn/);
   assert.match(app, /resourceLayer\.applyEdits\(\{ updateFeatures: \[update\.feature\] \}\)/);
   assert.match(app, /@arcgis\/core\/rest\/locator\.js/);

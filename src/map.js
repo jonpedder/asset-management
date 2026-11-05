@@ -1,3 +1,6 @@
+import { inferFieldBindings } from "./asset-editing.js";
+import { inferFacilityBindings } from "./facility-editing.js";
+
 let Graphic;
 let GraphicsLayer;
 let view;
@@ -45,7 +48,7 @@ export async function initializeMap(config, onSelect) {
     center: [config.map.center.longitude, config.map.center.latitude],
     zoom: config.map.zoom,
     constraints: { snapToZoom: false },
-    popup: { dockEnabled: true, dockOptions: { position: "bottom-right", buttonEnabled: false } }
+    popup: { dockEnabled: true, dockOptions: { position: "bottom-right", buttonEnabled: true, breakpoint: false } }
   });
   await view.when();
   view.on("click", async (event) => {
@@ -77,6 +80,38 @@ export async function initializeMap(config, onSelect) {
   return { map, view };
 }
 
+function servicePopupTemplate(layer, kind) {
+  const bindings = kind === "resource"
+    ? inferFieldBindings(layer.fields || [])
+    : inferFacilityBindings(layer.fields || [], layer.objectIdField);
+  const preferredKeys = kind === "resource"
+    ? ["assetType", "department", "category", "quantityRaw", "availability", "status", "priority", "locationName", "address", "city", "state", "zip", "notes"]
+    : ["name", "type", "status", "department", "address", "city", "state", "zip", "notes"];
+  const used = new Set();
+  const fieldInfos = preferredKeys.map((key) => bindings[key]).filter((name) => name && !used.has(name) && used.add(name)).map((name) => {
+    const field = layer.fields.find((candidate) => candidate.name === name);
+    const numeric = ["integer", "small-integer", "double", "single", "float"].some((part) => String(field?.type || "").toLowerCase().includes(part));
+    return { fieldName: name, label: field?.alias || name, ...(numeric ? { format: { places: 0, digitSeparator: true } } : {}) };
+  });
+  if (!fieldInfos.length) {
+    for (const field of layer.fields || []) {
+      const type = String(field.type || "").toLowerCase();
+      if (field.name === layer.objectIdField || type.includes("geometry") || type.includes("blob") || type.includes("raster")) continue;
+      fieldInfos.push({ fieldName: field.name, label: field.alias || field.name });
+      if (fieldInfos.length === 10) break;
+    }
+  }
+  const titleField = kind === "resource" ? bindings.assetType : bindings.name;
+  return {
+    title: titleField ? `{${titleField}}` : layer.title,
+    content: [
+      { type: "text", text: kind === "resource" ? "<b>Resource inventory record</b>" : "<b>Facility inventory record</b>" },
+      { type: "fields", fieldInfos }
+    ],
+    fieldInfos
+  };
+}
+
 export async function addServiceLayers(config) {
   const FeatureLayer = await $arcgis.import("@arcgis/core/layers/FeatureLayer.js");
   removeServiceLayers();
@@ -96,6 +131,8 @@ export async function addServiceLayers(config) {
   });
   map.addMany([facilityLayer, resourceLayer], 0);
   await Promise.all([resourceLayer.load(), facilityLayer.load()]);
+  resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
+  facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
   serviceLayers = [resourceLayer, facilityLayer];
   window.__esriLayers.Resources = resourceLayer;
   window.__esriLayers.Facilities = facilityLayer;
@@ -111,12 +148,27 @@ function graphicFor(record, symbol) {
   return new Graphic({
     geometry: record.geometry,
     symbol,
-    attributes: { recordId: record.id, title: record.assetType || record.name, source: record.source, location: record.locationMethod },
-    popupTemplate: {
+    attributes: {
+      recordId: record.id,
       title: record.assetType || record.name,
+      source: record.source,
+      category: record.category || record.type || "Not provided",
+      department: record.department || "Not provided",
+      status: record.status || "Unknown",
+      quantity: record.quantity?.raw || "Not provided",
+      address: [record.locationName, record.address, record.city, record.state, record.zip].filter(Boolean).join(", ") || "Not provided",
+      location: record.locationMethod || (record.geometry ? "Mapped location" : "No geometry")
+    },
+    popupTemplate: {
+      title: "{title}",
       content: [{ type: "fields", fieldInfos: [
-        { fieldName: "source", label: "Source" },
-        { fieldName: "location", label: "Location status" }
+        { fieldName: "category", label: record.assetType ? "Category" : "Facility type" },
+        { fieldName: "department", label: "Department" },
+        { fieldName: "status", label: "Status" },
+        ...(record.assetType ? [{ fieldName: "quantity", label: "Quantity" }] : []),
+        { fieldName: "address", label: "Address" },
+        { fieldName: "location", label: "Location status" },
+        { fieldName: "source", label: "Source" }
       ] }]
     }
   });
