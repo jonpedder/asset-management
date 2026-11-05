@@ -127,7 +127,6 @@ export async function initializeMap(config, onSelect, options = {}) {
     container: "mapView",
     map,
     constraints: { snapToZoom: false },
-    ui: { components: ["attribution"] },
     popup: { dockEnabled: true, dockOptions: { position: "bottom-right", buttonEnabled: true, breakpoint: false } }
   };
   if (!useWebMap) {
