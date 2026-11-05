@@ -314,7 +314,25 @@ export function startPointSelection() {
   return new Promise((resolve, reject) => { pointSelection = { resolve, reject }; });
 }
 
-export function focusRecord(record) {
+export async function focusRecord(record) {
   if (!record?.geometry || !view) return;
-  view.goTo({ target: record.geometry, zoom: Math.max(view.zoom, 13) }, { duration: 500 }).catch(() => {});
+  try {
+    await view.goTo({ target: record.geometry, zoom: Math.max(view.zoom, 13) }, { duration: 500 });
+    let feature = null;
+    if (record.sourceType === "service" && record.objectId != null) {
+      const serviceLayer = serviceLayers.find((layer) => record.id.startsWith("service-facility-") ? layer.title === "Facilities" : layer.title === "Resources");
+      if (serviceLayer) {
+        const result = await serviceLayer.queryFeatures({ objectIds: [record.objectId], outFields: ["*"], returnGeometry: true });
+        feature = result.features?.[0] || null;
+      }
+    } else {
+      for (const layer of [importedLayer, mockedLayer, demoLayer]) {
+        feature = layer?.graphics?.find((graphic) => graphic.attributes?.recordId === record.id) || null;
+        if (feature) break;
+      }
+    }
+    if (feature) await view.openPopup({ features: [feature], location: feature.geometry || record.geometry });
+  } catch {
+    // Selection details still remain available if navigation or popup loading fails.
+  }
 }
