@@ -11,9 +11,10 @@ The documented twelve-column CSV shape is normalized into:
 - identity: `id`, `assetType`, `department`, `category`
 - planning: quantity range and midpoint, availability, EOC role, status, priority, operator domain, gap, unit-cost range, notes
 - provenance: `source`, `sourceType`, `locationMethod`, `isMockLocation`
+- location: `facility`, `locationName`, `address`, `city`, `state`, `zip`
 - display geometry: exactly one point per input record
 
-Quantity and unit-cost ranges preserve raw text, minimum, maximum, and midpoint estimate. A record with quantity 100 still creates one map point.
+Quantity and unit-cost ranges preserve raw text, minimum, maximum, and midpoint estimate. A record with quantity 100 still creates one map point. Explicit bulk facility assignment replaces the selected imported records' facility/location text, point geometry, mock flag, and location method in one strict session update. Service payloads preserve original attributes and alter only conservatively bound editable location fields plus geometry; when no such text fields exist, the UI discloses a geometry-only assignment.
 
 ## Location hierarchy
 

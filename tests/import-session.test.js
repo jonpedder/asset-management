@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { clearImportSession, IMPORT_SESSION_KEY, readImportSession, saveImportSession, updateImportSessionRecord } from "../src/import-session.js";
+import { clearImportSession, IMPORT_SESSION_KEY, readImportSession, saveImportSession, updateImportSessionRecord, updateImportSessionRecords } from "../src/import-session.js";
 import { normalizeImportedRecord } from "../src/normalize.js";
 import { inspectCsv, mapCsvRecords } from "../src/csv.js";
 
@@ -26,6 +26,17 @@ test("strict session edit saves and reads location fields and geometry", () => {
   updateImportSessionRecord("import-1", { locationName: "EOC", address: "100 Main", city: "Redwood City", state: "CA", zip: "94063", facility: "EOC", geometry: { type: "point", longitude: -122.2, latitude: 37.4 }, locationMethod: "Existing facility selected" }, store);
   const record = readImportSession(store).records[0]; assert.equal(record.locationName, "EOC"); assert.equal(record.geometry.spatialReference.wkid, 4326);
   assert.throws(() => updateImportSessionRecord("missing", {}, store), /no longer available/i);
+});
+
+test("strict bulk session update validates all IDs and persists facility fields and geometry atomically", () => {
+  const store = storage();
+  saveImportSession([normalized, { ...normalized, assetType: "Pump" }], {}, store);
+  const geometry = { type: "point", x: -122.2, y: 37.4, spatialReference: { wkid: 4326 } };
+  updateImportSessionRecords(["import-1", "import-2"], { locationName: "Main Yard", facility: "Main Yard", address: "1 Main", city: "Redwood City", state: "CA", zip: "94063", geometry, locationMethod: "Existing facility assigned in bulk", isMockLocation: false }, store);
+  assert.deepEqual(readImportSession(store).records.map((record) => [record.facility, record.geometry.x]), [["Main Yard", -122.2], ["Main Yard", -122.2]]);
+  const before = store.values.get(IMPORT_SESSION_KEY);
+  assert.throws(() => updateImportSessionRecords(["import-1", "missing"], { city: "Wrong" }, store), /no longer available/i);
+  assert.equal(store.values.get(IMPORT_SESSION_KEY), before);
 });
 
 test("explicit field mappings flow through normalization into session staging", () => {

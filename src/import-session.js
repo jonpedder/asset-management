@@ -94,11 +94,25 @@ export function readImportSession(storage) {
   } catch { store.removeItem(IMPORT_SESSION_KEY); return null; }
 }
 export function updateImportSessionRecord(recordId, patch, storage) {
+  return updateImportSessionRecords([recordId], patch, storage);
+}
+function prepareImportSessionUpdate(recordIds, patch, storage) {
+  if (!Array.isArray(recordIds) || !recordIds.length || new Set(recordIds).size !== recordIds.length) throw new Error("Imported record IDs must be a non-empty unique array.");
   const existing = readImportSession(storage);
   if (!existing) throw new Error("The imported session is no longer available.");
-  const index = existing.records.findIndex((record) => record.id === recordId);
-  if (index < 0) throw new Error("The imported record is no longer available.");
-  existing.records[index] = serializeRecord({ ...existing.records[index], ...patch, id: recordId }, index, true);
-  return persistPayload({ ...existing, savedAt: new Date().toISOString() }, storage);
+  const requested = new Set(recordIds);
+  if (existing.records.filter((record) => requested.has(record.id)).length !== requested.size) throw new Error("One or more imported records are no longer available.");
+  const records = existing.records.map((record, index) => requested.has(record.id)
+    ? serializeRecord({ ...record, ...patch, id: record.id }, index, true)
+    : record);
+  return { existing, records };
+}
+export function validateImportSessionRecordUpdates(recordIds, patch, storage) {
+  prepareImportSessionUpdate(recordIds, patch, storage);
+  return true;
+}
+export function updateImportSessionRecords(recordIds, patch, storage) {
+  const { existing, records } = prepareImportSessionUpdate(recordIds, patch, storage);
+  return persistPayload({ ...existing, records, savedAt: new Date().toISOString() }, storage);
 }
 export function clearImportSession(storage) { storageOrDefault(storage).removeItem(IMPORT_SESSION_KEY); }
