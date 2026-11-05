@@ -1,7 +1,7 @@
 const EXPECTED_HEADERS = [
   "Asset Type", "Dept", "Category", "Est. Qty", "Availability",
   "EOC Role / Use", "Operator Required?", "Status", "Gap Description",
-  "Procurement Priority", "Est. Unit Cost", "Notes / Source"
+  "Procurement Priority", "Est. Unit Cost", "Notes / Source", "Location name", "Address", "City", "State", "ZIP", "Facility"
 ];
 
 export const TARGET_FIELDS = [
@@ -16,7 +16,13 @@ export const TARGET_FIELDS = [
   { key: "gapDescription", label: "Gap Description", required: false, aliases: ["Gap Description", "Gap", "Need / Gap"] },
   { key: "priority", label: "Procurement Priority", required: false, aliases: ["Procurement Priority", "Priority", "Purchase Priority"] },
   { key: "unitCost", label: "Est. Unit Cost", required: false, aliases: ["Est. Unit Cost", "Estimated Unit Cost", "Unit Cost", "Cost Per Unit"] },
-  { key: "notes", label: "Notes / Source", required: false, aliases: ["Notes / Source", "Notes", "Source", "Comments"] }
+  { key: "notes", label: "Notes / Source", required: false, aliases: ["Notes / Source", "Notes", "Source", "Comments"] },
+  { key: "locationName", label: "Location name", required: false, aliases: ["Location name", "Location", "Site name"] },
+  { key: "address", label: "Address", required: false, aliases: ["Address", "Street address", "Address 1", "Street"] },
+  { key: "city", label: "City", required: false, aliases: ["City", "Municipality", "Town"] },
+  { key: "state", label: "State", required: false, aliases: ["State", "Province", "Region"] },
+  { key: "zip", label: "ZIP", required: false, aliases: ["ZIP", "ZIP Code", "Postal Code", "Postcode"] },
+  { key: "facility", label: "Facility", required: false, aliases: ["Facility", "Facility name", "Site"] }
 ];
 
 export function canonicalHeader(value) {

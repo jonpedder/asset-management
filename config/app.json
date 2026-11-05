@@ -13,7 +13,7 @@
   "map": { "basemap": "dark-gray-vector", "center": { "longitude": -122.3255, "latitude": 37.563 }, "zoom": 10 },
   "import": {
     "maxFileBytes": 10000000,
-    "privacyNote": "The selected file is parsed in this browser only. Normalized records are staged in sessionStorage for this tab/session and are never uploaded, written to localStorage, added to the repository, or sent to the feature service. Clear the staged import or end the browser session to remove it."
+    "privacyNote": "The selected file is parsed locally and normalized records remain in sessionStorage for this tab/session. Editing an imported record updates only that session. No import is bulk geocoded or uploaded. Separately, a signed-in operator may explicitly Save a current resource when the layer allows updates; address geocoding and service saves can consume services or credits. Facilities are reference-only."
   },
   "branding": {
     "appName": "Asset Management",

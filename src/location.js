@@ -1,4 +1,5 @@
 import { normalizeKey } from "./normalize.js";
+import { extractFacilityAddress, matchFacility } from "./asset-editing.js";
 
 function attributeText(record) {
   const attributes = record?.attributes ?? record ?? {};
@@ -67,6 +68,22 @@ export function deterministicCountyPoint(record, center = { longitude: -98.5795,
 export function assignLocations(records, resources = [], facilities = [], center) {
   const summary = { resourceMatches: 0, facilityMatches: 0, mocked: 0, total: records.length };
   const located = records.map((record) => {
+    if (record.geometry && /^(User selected|Geocoded address|Existing facility)/.test(record.locationMethod || "")) {
+      if (/Existing facility/.test(record.locationMethod)) summary.facilityMatches += 1;
+      else summary.resourceMatches += 1;
+      return record;
+    }
+    const requestedFacility = matchFacility(record.facility || record.locationName, facilities);
+    if (requestedFacility && pointFromGeometry(requestedFacility.geometry)) {
+      const address = extractFacilityAddress(requestedFacility);
+      summary.facilityMatches += 1;
+      return { ...record, locationName: address.name, address: address.address, city: address.city, state: address.state, zip: address.zip,
+        facility: address.name, geometry: pointFromGeometry(requestedFacility.geometry), locationMethod: "Existing facility match", isMockLocation: false };
+    }
+    if ([record.address, record.city, record.state, record.zip].some((value) => String(value || "").trim())) {
+      summary.mocked += 1;
+      return { ...record, geometry: deterministicCountyPoint(record, center), locationMethod: "Address retained · deterministic mocked county point", isMockLocation: true };
+    }
     const resource = bestMatch(record, resources, "resource");
     if (resource) {
       summary.resourceMatches += 1;
