@@ -17,6 +17,28 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.equal(config.layers.facilities, 1);
 });
 
+test("optimized UI exposes Web Map reuse, map controls, collapsed bulk actions, and coordinate previews", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const map = await readFile(new URL("../src/map.js", import.meta.url), "utf8");
+  assert.match(map, /new WebMap\(\{ portalItem:/);
+  assert.match(map, /findWebMapLayer\(config\.serviceUrl, layerId\)/);
+  assert.match(map, /window\.__esriWebMap = webmap/);
+  for (const control of ["mapZoomIn", "mapZoomOut", "mapHome", "mapPopupDock", "mapBookmarkSelect", "mapLegendList"]) assert.match(html, new RegExp(control));
+  assert.match(map, /updateLegend\(\)/);
+  assert.match(map, /updateBookmarks\(\)/);
+  assert.doesNotMatch(map, /@arcgis\/core\/widgets\//);
+  assert.match(map, /buttonEnabled: true/);
+  assert.match(html, /<details class="bulk-section">/);
+  assert.doesNotMatch(html, /Reported fleet benchmark|Location validation/);
+  assert.match(app, /coordinateFields\("asset"/);
+  assert.match(app, /coordinateFields\("facility"/);
+  assert.match(app, /id="addNewFacility"/);
+  assert.match(app, />Locate<\/button>/);
+  assert.match(app, /geocodeEditor\(true\)/);
+  assert.match(app, /geocodeFacility\(true\)/);
+});
+
 test("build allowlist publishes settings and runtime modules without CSV", async () => {
   const build = await readFile(new URL("../scripts/build.mjs", import.meta.url), "utf8");
   assert.match(build, /"settings\.html"/);

@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261106-1">
+  <link rel="stylesheet" href="./styles/app.css?v=20261107-1">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261106-2"></script>
+  <script type="module" src="./src/app.js?v=20261107-1"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -43,18 +43,16 @@
     <article><span>Imported records</span><strong id="importedRecords">0</strong><small>Browser-local preview</small></article>
     <article><span>Imported est. qty</span><strong id="importedQuantity">0</strong><small>Minimum–maximum range</small></article>
     <article><span>Location coverage</span><strong id="coverageMetric">0%</strong><small>Matched geometry, not accuracy</small></article>
-    <article class="benchmark"><span>Reported fleet benchmark</span><strong>1,465</strong><small>Unverified · never added to current totals</small></article>
   </section>
 
   <main id="workspace" class="workspace">
     <section class="inventory-panel panel" aria-labelledby="inventoryHeading">
-      <div class="panel-header">
+      <div class="panel-header inventory-header">
         <div><p class="eyebrow">Inventory</p><h1 id="inventoryHeading" data-label="inventoryHeading">Resources &amp; facilities</h1></div>
-        <span class="count-badge"><span id="inventoryCount">0</span> shown</span>
-      </div>
-      <div class="tabs" role="tablist" aria-label="Inventory type">
-        <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel"><span data-label="resourcesTab">Resources</span></button>
-        <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel"><span data-label="facilitiesTab">Facilities</span> <span id="facilityCount" class="count-inline">0</span></button>
+        <div class="inventory-switcher"><div class="tabs" role="tablist" aria-label="Inventory type">
+          <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel"><span data-label="resourcesTab">Resources</span></button>
+          <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel"><span data-label="facilitiesTab">Facilities</span> <span id="facilityCount" class="count-inline">0</span></button>
+        </div><span class="count-badge"><span id="inventoryCount">0</span> shown</span></div>
       </div>
       <section id="resourcePanel" role="tabpanel" aria-labelledby="resourceTab" class="inventory-content">
         <div class="filters">
@@ -67,13 +65,15 @@
           <label class="toggle"><input id="mockedToggle" type="checkbox" checked><span>Show mocked import points</span></label>
           <p id="activeFilters" class="active-filters" role="status">No inventory filters active.</p>
         </div>
-        <section class="bulk-toolbar" aria-labelledby="bulkHeading">
-          <div><strong id="bulkHeading">Bulk facility assignment</strong><span id="selectedCount">0 assets selected</span></div>
-          <label><span>Loaded facility</span><select id="bulkFacility"><option value="">Choose a facility</option></select></label>
-          <button id="applyBulkFacility" class="btn btn-primary" type="button" disabled>Apply facility</button>
-          <p id="bulkPreview" class="bulk-preview">Select assets and a facility. Nothing is saved until Apply facility is clicked.</p>
-          <p id="bulkStatus" class="bulk-status" role="status" aria-live="polite"></p>
-        </section>
+        <details class="bulk-section">
+          <summary><span><strong id="bulkHeading">Bulk facility assignment</strong><small id="selectedCount">0 assets selected</small></span><span class="bulk-summary-hint">Expand</span></summary>
+          <section class="bulk-toolbar" aria-labelledby="bulkHeading">
+            <label><span>Loaded facility</span><select id="bulkFacility"><option value="">Choose a facility</option></select></label>
+            <button id="applyBulkFacility" class="btn btn-primary" type="button" disabled>Apply facility</button>
+            <p id="bulkPreview" class="bulk-preview">Select assets and a facility. Nothing is saved until Apply facility is clicked.</p>
+            <p id="bulkStatus" class="bulk-status" role="status" aria-live="polite"></p>
+          </section>
+        </details>
         <div class="table-wrap">
           <table>
             <caption class="sr-only">Resource inventory with bulk selection</caption>
@@ -96,16 +96,21 @@
 
     <section class="map-panel" aria-label="Operational map">
       <div id="mapView"></div>
+      <nav class="map-navigation" aria-label="Map navigation">
+        <button id="mapZoomIn" class="map-control-button" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+        <button id="mapZoomOut" class="map-control-button" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+        <button id="mapHome" class="map-control-button" type="button" title="Return to the initial map view" aria-label="Home extent">⌂</button>
+        <button id="mapPopupDock" class="map-control-button map-control-button-text" type="button" title="Dock or undock the active popup" aria-pressed="true">Dock</button>
+      </nav>
+      <div class="map-reference-tools">
+        <details><summary>Legend</summary><div id="mapLegendList" class="map-legend-list"><p>Layers load after sign-in.</p></div></details>
+        <details><summary>Bookmarks</summary><label class="sr-only" for="mapBookmarkSelect">Map bookmark</label><select id="mapBookmarkSelect"><option value="">Choose a bookmark</option></select></details>
+      </div>
       <div id="mapMessage" class="map-message" role="status"><strong>Preparing map</strong><span>Loading ArcGIS Maps SDK for JavaScript 5.1…</span></div>
-      <div class="map-legend" aria-label="Map legend"><span><i class="dot current"></i>Current</span><span><i class="dot imported"></i>Imported matched</span><span><i class="dot mocked"></i>Imported mocked</span><span><i class="dot demo"></i>Invented demo</span></div>
     </section>
 
     <aside class="detail-panel panel" aria-labelledby="detailHeading">
       <div class="panel-header"><div><p class="eyebrow">Selection</p><h2 id="detailHeading">Inventory detail</h2></div></div>
-      <div class="validation-card">
-        <strong>Location validation</strong>
-        <p id="locationSummary">Stage a CSV in Settings to run location validation.</p>
-      </div>
       <div id="detail" class="detail-scroll">
         <div class="empty-state"><span aria-hidden="true">⌖</span><strong>Select a record</strong><p>Choose a table row or imported map point to inspect source, quantity, and location provenance.</p></div>
       </div>

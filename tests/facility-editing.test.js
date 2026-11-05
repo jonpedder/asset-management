@@ -29,6 +29,12 @@ test("facility bindings are conservative and system fields stay excluded", () =>
   assert.deepEqual(additionalFacilityFields(fields, bindings, "OBJECTID").map((field) => field.name), ["CAPACITY"]);
 });
 
+test("ambiguous facility matches are not exposed as additional fields", () => {
+  const ambiguous = [{ name: "TYPE_A", alias: "Facility Type", type: "string", editable: true }, { name: "TYPE_B", alias: "Facility Type", type: "string", editable: true }];
+  assert.equal(inferFacilityBindings(ambiguous).type, undefined);
+  assert.deepEqual(additionalFacilityFields(ambiguous).map((field) => field.name), []);
+});
+
 test("facility create/update/delete gates are explicit", () => {
   const bindings = inferFacilityBindings(fields, "OBJECTID");
   assert.equal(facilityEditGate({ action: "add", signedIn: false, layer, bindings, geometry: point }).allowed, false);

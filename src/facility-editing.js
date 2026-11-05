@@ -48,7 +48,12 @@ export function inferFacilityBindings(fields = [], objectIdField = "") {
 
 export function additionalFacilityFields(fields = [], bindings = {}, objectIdField = "") {
   const bound = new Set(Object.values(bindings));
-  return fields.filter((field) => isEditableFacilityField(field, objectIdField) && !bound.has(field.name));
+  const ambiguous = new Set();
+  for (const definition of FACILITY_FIELDS) {
+    const ranked = fields.filter((field) => isEditableFacilityField(field, objectIdField)).map((field) => ({ field, score: scoreField(field, definition.aliases) })).filter(({ score }) => score >= 55).sort((a, b) => b.score - a.score);
+    if (ranked.length > 1 && ranked[0].score === ranked[1].score) ranked.filter(({ score }) => score === ranked[0].score).forEach(({ field }) => ambiguous.add(field.name));
+  }
+  return fields.filter((field) => isEditableFacilityField(field, objectIdField) && !bound.has(field.name) && !ambiguous.has(field.name));
 }
 
 export function geometryCompatibility(layer, geometry) {

@@ -14,7 +14,7 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   assert.match(html, /role="tablist"/); assert.match(html, />Settings<\/button>/); assert.match(html, />Configuration<\/button>/); assert.match(html, />Help &amp; How-to<\/button>/);
   assert.match(html, /id="settingsImportForm"/); assert.match(html, /id="settingsCsvFile"/); assert.match(html, /id="clearStagedImport"/); assert.match(html, /id="openInventoryMap"/);
   assert.match(html, /sessionStorage/); assert.match(html, /Map any headings/); assert.match(html, /id="fieldMappingRegion"/); assert.match(html, /id="mappingRows"/); assert.match(html, /id="resetAutomaticMappings"/); assert.match(html, /id="mappingPreview"/);
-  assert.match(html, /Asset Type is required/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
+  assert.match(html, /Asset Type is required/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /id="webmapItemId"/); assert.doesNotMatch(html, /1,465|Fleet reconciliation/);
 });
 
 test("settings runtime inspects, maps, previews, normalizes, and stages the selected CSV", async () => {

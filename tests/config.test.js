@@ -6,7 +6,7 @@ function storage() {
   const values = new Map();
   return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key), values };
 }
-const base = { portalUrl: "https://example.com", featureServiceItemId: "a".repeat(32), serviceUrl: "https://example.com/FeatureServer", layers: { resources: 0, facilities: 1 }, oauth: { enabled: true, clientId: "public-id", mode: "redirect", redirectUrl: "https://example.com/app/" }, map: { basemap: "dark-gray-vector", center: { longitude: -120, latitude: 37 }, zoom: 9 }, import: { maxFileBytes: 1000000 } };
+const base = { portalUrl: "https://example.com", featureServiceItemId: "a".repeat(32), serviceUrl: "https://example.com/FeatureServer", layers: { resources: 0, facilities: 1 }, oauth: { enabled: true, clientId: "public-id", mode: "redirect", redirectUrl: "https://example.com/app/" }, map: { webmapItemId: "", basemap: "dark-gray-vector", center: { longitude: -120, latitude: 37 }, zoom: 9 }, import: { maxFileBytes: 1000000 } };
 
 test("config merge preserves nested deployment values and applies safe overrides", () => {
   const merged = mergeConfig(base, { map: { zoom: 12 }, oauth: { clientId: "other-public-id" }, token: "no", clientSecret: "no" });
@@ -23,5 +23,12 @@ test("config overrides save, read, and clear using local storage", () => {
 test("loadConfig fetches deployment config and merges local overrides", async () => {
   const store = storage(); saveConfigOverrides({ map: { zoom: 13 } }, store);
   const config = await loadConfig("config.json", { storage: store, fetch: async () => ({ ok: true, json: async () => base }) });
-  assert.equal(config.map.zoom, 13); assert.equal(config.layers.facilities, 1);
+  assert.equal(config.map.zoom, 13); assert.equal(config.map.webmapItemId, ""); assert.equal(config.layers.facilities, 1);
+});
+
+test("optional Web Map item ID is sanitized and validated without changing fallback behavior", async () => {
+  const itemId = "b".repeat(32);
+  const merged = mergeConfig(base, { map: { webmapItemId: itemId } });
+  assert.equal(merged.map.webmapItemId, itemId);
+  await assert.rejects(() => loadConfig("config.json", { storage: storage(), fetch: async () => ({ ok: true, json: async () => ({ ...base, map: { ...base.map, webmapItemId: "bad" } }) }) }), /Web map item ID/);
 });

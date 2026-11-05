@@ -23,5 +23,3 @@ Quantity and unit-cost ranges preserve raw text, minimum, maximum, and midpoint 
 3. Generate a stable point around the configured county center using a deterministic record hash.
 
 Coverage is `(resource matches + facility matches) / imported records`. It is labeled **coverage**, never accuracy. Mocked points are visually distinct and can be hidden.
-
-The reported fleet total of 1,465 is an unverified benchmark shown outside current and imported totals.

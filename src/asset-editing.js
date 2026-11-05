@@ -93,7 +93,12 @@ export function isEditableServiceField(field, objectIdField = "") {
 
 export function additionalEditableFields(fields = [], bindings = {}, objectIdField = "") {
   const bound = new Set(Object.values(bindings));
-  return fields.filter((field) => isEditableServiceField(field, objectIdField) && !bound.has(field.name));
+  const ambiguous = new Set();
+  for (const definition of NORMALIZED_FIELDS.filter((field) => field.key !== "facility")) {
+    const ranked = fields.map((field) => ({ field, score: aliasScore(field, definition.aliases) })).filter(({ score }) => score >= 55).sort((a, b) => b.score - a.score);
+    if (ranked.length > 1 && ranked[0].score === ranked[1].score) ranked.filter(({ score }) => score === ranked[0].score).forEach(({ field }) => ambiguous.add(field.name));
+  }
+  return fields.filter((field) => isEditableServiceField(field, objectIdField) && !bound.has(field.name) && !ambiguous.has(field.name));
 }
 
 export function coerceFieldValue(raw, field) {

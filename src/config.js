@@ -6,7 +6,7 @@ const allowed = {
   portalUrl: true, featureServiceItemId: true, serviceUrl: true,
   layers: ["resources", "facilities"],
   oauth: ["enabled", "clientId", "mode", "redirectUrl", "popupCallbackUrl"],
-  map: ["basemap", "center", "zoom"], import: ["maxFileBytes", "privacyNote"],
+  map: ["webmapItemId", "basemap", "center", "zoom"], import: ["maxFileBytes", "privacyNote"],
   branding: ["appName", "subtitle", "logoUrl", "colors"],
   labels: ["inventoryHeading", "resourcesTab", "facilitiesTab", "settingsImport", "selectionHeading"],
   statusColors: ["available", "limited", "unavailable", "unknown"], resourceColors: ["current", "imported", "mocked", "demo"],
@@ -27,7 +27,7 @@ export function sanitizeConfigOverrides(value) {
   result.layers = pickMap(object(source.layers), allowed.layers);
   result.oauth = pickMap(object(source.oauth), allowed.oauth);
   const map = object(source.map);
-  result.map = pickMap(map, ["basemap", "zoom"]);
+  result.map = pickMap(map, ["webmapItemId", "basemap", "zoom"]);
   result.map.center = pickMap(object(map.center), ["longitude", "latitude"]);
   result.import = pickMap(object(source.import), allowed.import);
   const branding = object(source.branding);
@@ -74,6 +74,7 @@ export function validateConfig(config) {
   if (config.oauth.mode !== "redirect") throw new Error("OAuth mode must remain full-page redirect.");
   if (!/^https:\/\//i.test(config.oauth.redirectUrl || "")) throw new Error("OAuth redirect URL must use HTTPS.");
   if (!/^[a-f0-9]{32}$/i.test(config.featureServiceItemId || "")) throw new Error("Feature service item ID must contain 32 hexadecimal characters.");
+  if (config.map?.webmapItemId && !/^[a-f0-9]{32}$/i.test(config.map.webmapItemId)) throw new Error("Web map item ID must be blank or contain 32 hexadecimal characters.");
   for (const key of ["resources", "facilities"]) if (!Number.isInteger(Number(config.layers?.[key])) || Number(config.layers[key]) < 0) throw new Error(`Invalid ${key} layer index.`);
   const { longitude, latitude } = config.map?.center || {};
   if (!Number.isFinite(Number(longitude)) || !Number.isFinite(Number(latitude))) throw new Error("Map center must contain numeric longitude and latitude.");

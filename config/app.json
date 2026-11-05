@@ -10,10 +10,10 @@
     "redirectUrl": "https://jonpedder.github.io/asset-management/",
     "popupCallbackUrl": "https://jonpedder.github.io/asset-management/oauth-callback.html"
   },
-  "map": { "basemap": "dark-gray-vector", "center": { "longitude": -122.3255, "latitude": 37.563 }, "zoom": 10 },
+  "map": { "webmapItemId": "", "basemap": "dark-gray-vector", "center": { "longitude": -122.3255, "latitude": 37.563 }, "zoom": 10 },
   "import": {
     "maxFileBytes": 10000000,
-    "privacyNote": "The selected file is parsed locally and normalized records remain in sessionStorage for this tab/session. Editing an imported record updates only that session. No import is bulk geocoded or uploaded. Separately, a signed-in operator may explicitly Save a current resource when the layer allows updates; address geocoding and service saves can consume services or credits. Facilities are reference-only."
+    "privacyNote": "The selected file is parsed locally and normalized records remain in sessionStorage for this tab/session. Editing an imported record updates only that session. No import is bulk geocoded or uploaded. A Locate preview uses forStorage=false; saving address mode re-confirms with forStorage=true. Signed-in operators may explicitly save resources or facilities when the target layer allows it; geocoding and service edits can consume services or credits."
   },
   "branding": {
     "appName": "Asset Management",

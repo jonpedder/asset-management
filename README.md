@@ -4,7 +4,7 @@ Static operational resource and facility inventory with browser-local CSV stagin
 
 ## Features
 
-- ArcGIS Maps SDK for JavaScript 5.1 CDN with `$arcgis.import`
+- ArcGIS Maps SDK for JavaScript 5.1 CDN with `$arcgis.import`, optional portal Web Map loading, matching service-layer reuse, bookmarks, legend, home, zoom, and dock-toggle popups
 - Anonymous service access attempt plus optional full-page ArcGIS OAuth redirect sign-in
 - Explicit, authorized Resources updates and complete Facilities add/update/remove using loaded SDK FeatureLayers and capability gates
 - Accessible inventory table with combined search/source/facility/city/ZIP filters, persistent checkbox selection, details, map selection, and source provenance
@@ -31,7 +31,7 @@ Opening `index.html` directly with `file://` is unsupported because modules and 
 
 ## Configuration
 
-Runtime public configuration is in `config/app.json`. The OAuth client ID is a public identifier, not a secret. Asset Management uses a full-page authorization-code redirect to the registered canonical URL `https://jonpedder.github.io/asset-management/`. This avoids popup/opener failures during Entra or ArcGIS sign-in. The dedicated callback remains registered for future popup use, but the current flow does not depend on it. The existing Resource & Asset Management application is not modified.
+Runtime public configuration is in `config/app.json`. Set `map.webmapItemId` to a Web Map item in the configured portal, or leave it blank to retain the basemap/center/zoom fallback. Matching Resources and Facilities layers already in that Web Map are reused by canonical service URL and layer ID rather than duplicated. The OAuth client ID is a public identifier, not a secret. Asset Management uses a full-page authorization-code redirect to the registered canonical URL `https://jonpedder.github.io/asset-management/`. This avoids popup/opener failures during Entra or ArcGIS sign-in. The dedicated callback remains registered for future popup use, but the current flow does not depend on it. The existing Resource & Asset Management application is not modified.
 
 The fallback center is configured to an approximate San Mateo County map center. It is used only to create clearly labeled deterministic mock points when no resource or facility geometry can be matched; it is not an operational asset location.
 

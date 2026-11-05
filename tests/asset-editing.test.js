@@ -32,7 +32,7 @@ test("field binding is conservative and leaves ambiguous aliases unbound", () =>
   assert.equal(bindings.assetType, "AssetType");
   assert.equal(bindings.quantityRaw, undefined);
   assert.ok(additionalEditableFields(fields, bindings, "OBJECTID").some((field) => field.name === "CustomCode"));
-  assert.ok(!additionalEditableFields(fields, bindings, "OBJECTID").some((field) => field.name === "OBJECTID"));
+  assert.ok(!additionalEditableFields(fields, bindings, "OBJECTID").some((field) => ["OBJECTID", "Qty", "OtherQty"].includes(field.name)));
 });
 
 test("service value coercion validates nullability, ranges, domains, and types", () => {

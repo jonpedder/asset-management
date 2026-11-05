@@ -42,7 +42,7 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "locationSummary", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
+  ["systemStatus", "authStatus", "serviceStatus", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -99,9 +99,6 @@ function updateMetrics() {
     : 0;
   const coverage = state.imported.length ? state.locationSummary.coveragePercent : currentCoverage;
   elements.coverageMetric.textContent = `${coverage}%`;
-  elements.locationSummary.textContent = state.imported.length
-    ? `${state.locationSummary.resourceMatches} resource matches · ${state.locationSummary.facilityMatches} facility matches · ${state.locationSummary.mocked} mocked county points`
-    : "Stage a CSV in Settings to run location validation.";
 }
 
 function sourceLabel(record) {
@@ -225,6 +222,26 @@ function fieldControl(field, value, additional = false) {
   if (Array.isArray(coded)) return `<label><span>${escapeHtml(field.label || field.alias || field.name)}${field.nullable === false ? " *" : ""}${field.disabled ? " (not stored by this layer)" : ""}</span><select id="${escapeHtml(id)}" ${additional ? `data-additional-field="${escapeHtml(field.name)}"` : `name="${escapeHtml(field.key)}"`} ${field.nullable === false ? "required" : ""} ${field.disabled ? "disabled" : ""}><option value="">${field.nullable === false ? "Choose a value" : "No value"}</option>${coded.map((entry) => `<option value="${escapeHtml(entry.code)}" ${String(entry.code) === String(value) ? "selected" : ""}>${escapeHtml(entry.name)}</option>`).join("")}</select></label>`;
   return `<label><span>${escapeHtml(field.label || field.alias || field.name)}${field.nullable === false ? " *" : ""}${field.disabled ? " (not stored by this layer)" : ""}</span><input id="${escapeHtml(id)}" ${additional ? `data-additional-field="${escapeHtml(field.name)}"` : `name="${escapeHtml(field.key)}"`} value="${escapeHtml(value ?? "")}" ${field.length ? `maxlength="${field.length}"` : ""} ${field.nullable === false ? "required" : ""} ${field.disabled ? "disabled" : ""}></label>`;
 }
+function pointCoordinates(geometry) {
+  if (!geometry) return { latitude: "", longitude: "" };
+  const longitude = Number(geometry.longitude);
+  const latitude = Number(geometry.latitude);
+  if (Number.isFinite(longitude) && Number.isFinite(latitude)) return { latitude: latitude.toFixed(6), longitude: longitude.toFixed(6) };
+  const wkid = geometry.spatialReference?.wkid || geometry.spatialReference?.latestWkid;
+  if ([4326, 4269].includes(Number(wkid)) && Number.isFinite(Number(geometry.x)) && Number.isFinite(Number(geometry.y))) return { latitude: Number(geometry.y).toFixed(6), longitude: Number(geometry.x).toFixed(6) };
+  return { latitude: "", longitude: "" };
+}
+function coordinateFields(prefix, geometry) {
+  const coordinates = pointCoordinates(geometry);
+  return `<div class="form-grid coordinate-fields" aria-label="Location preview coordinates"><label><span>Latitude</span><input id="${prefix}Latitude" value="${coordinates.latitude}" readonly aria-readonly="true"></label><label><span>Longitude</span><input id="${prefix}Longitude" value="${coordinates.longitude}" readonly aria-readonly="true"></label></div>`;
+}
+function updateCoordinateFields(prefix, geometry) {
+  const coordinates = pointCoordinates(geometry);
+  const latitude = byId(`${prefix}Latitude`); const longitude = byId(`${prefix}Longitude`);
+  if (latitude) latitude.value = coordinates.latitude;
+  if (longitude) longitude.value = coordinates.longitude;
+}
+
 function showAssetEditor() {
   const record = recordById(state.selectedId);
   if (!record || !record.assetType) return;
@@ -240,16 +257,18 @@ function showAssetEditor() {
   elements.detail.innerHTML = `<form id="assetEditForm" class="asset-edit-form" novalidate>
     <div class="editor-heading"><div><p class="eyebrow">Editing</p><h2>${escapeHtml(record.assetType)}</h2></div><button type="button" class="btn btn-quiet" id="cancelAssetEdit">Cancel</button></div>
     <p class="edit-boundary">${escapeHtml(gate.reason)} Facility records have separate, capability-gated edit actions.</p>
+    <p class="editor-help">Editable asset fields include confidently mapped normalized fields and any additional supported service fields. Object/global IDs, geometry and system-managed fields, noneditable fields, unsupported types, and ambiguous normalized matches are excluded.</p>
     <fieldset><legend>Inventory attributes</legend><div class="form-grid">${EDIT_FIELDS.map(([key, label]) => { const schema = isService ? state.resourceLayer.fields.find((field) => field.name === bindings[key]) : null; return fieldControl({ ...(schema || {}), key, label, disabled: isService && (!schema || schema.editable === false) }, values[key]); }).join("")}</div></fieldset>
     <fieldset><legend>Location</legend><div class="location-choices" role="radiogroup" aria-label="Location choice">
       <label><input type="radio" name="locationMode" value="current" checked> Retain current / selected geometry</label>
       <label><input type="radio" name="locationMode" value="facility"> Existing facility</label>
-      <label><input type="radio" name="locationMode" value="address"> Given address</label></div>
+      <label><input type="radio" name="locationMode" value="address"> Given address</label>
+      <label><input type="radio" name="locationMode" value="map"> Pick on map</label></div>
       <label id="facilityChoice" hidden><span>Existing facility</span><select id="editFacility"><option value="">Choose a loaded facility</option>${facilities.map((facility) => `<option value="${escapeHtml(facility.id)}">${escapeHtml(facility.name)}</option>`).join("")}</select></label>
       <div class="form-grid location-fields">
         ${fieldControl({ key: "locationName", label: "Location name" }, values.locationName)}${fieldControl({ key: "address", label: "Address" }, values.address)}
         ${fieldControl({ key: "city", label: "City" }, values.city)}${fieldControl({ key: "state", label: "State" }, values.state)}${fieldControl({ key: "zip", label: "ZIP" }, values.zip)}
-      </div><button id="locateAddress" class="btn btn-quiet" type="button" hidden>Locate address</button><p id="editLocationStatus" class="form-status" role="status">Current geometry will be retained.</p>
+      </div>${coordinateFields("asset", state.editGeometry)}<div class="facility-location-actions"><button id="locateAddress" class="btn btn-quiet" type="button" hidden>Locate</button><button id="pickAssetPoint" class="btn btn-quiet" type="button" hidden>Start map placement</button><button id="cancelAssetPoint" class="btn btn-quiet" type="button" hidden>Cancel map placement</button></div><p id="editLocationStatus" class="form-status" role="status">Current geometry will be retained.</p>
     </fieldset>
     ${additional.length ? `<details class="additional-attributes"><summary>Additional service attributes (${additional.length})</summary><div class="form-grid">${additional.map((field) => fieldControl(field, record.attributes?.[field.name], true)).join("")}</div></details>` : ""}
     <div id="editValidation" class="form-status" role="alert"></div><div class="editor-actions"><button class="btn" type="submit" ${gate.allowed ? "" : "disabled"}>Save changes</button><button class="btn btn-quiet" type="button" id="cancelAssetEdit2">Cancel</button></div>
@@ -259,11 +278,12 @@ function showAssetEditor() {
 function facilityFieldControl(definition, field, value, additional = false) {
   const id = `facility-${additional ? "additional-" : ""}${additional ? field.name : definition.key}`;
   const label = definition?.label || field.alias || field.name;
-  const disabled = !field;
+  const locationOnly = !field && ["address", "city", "state", "zip"].includes(definition?.key);
+  const disabled = !field && !locationOnly;
   const required = Boolean(definition?.required || field?.nullable === false);
   const coded = field?.domain?.codedValues;
   const attrs = `${additional ? `data-facility-additional="${escapeHtml(field.name)}"` : `name="${escapeHtml(definition.key)}"`} ${required ? "required" : ""} ${disabled ? "disabled" : ""}`;
-  const note = disabled ? '<small class="field-note">Not stored by this layer.</small>' : "";
+  const note = locationOnly ? '<small class="field-note">Used to locate the point; this layer has no field to store it.</small>' : disabled ? '<small class="field-note">Not stored by this layer.</small>' : "";
   if (Array.isArray(coded)) return `<label><span>${escapeHtml(label)}${required ? " *" : ""}</span><select id="${escapeHtml(id)}" ${attrs}><option value="">${required ? "Choose a value" : "No value"}</option>${coded.map((entry) => `<option value="${escapeHtml(entry.code)}" ${String(entry.code) === String(value) ? "selected" : ""}>${escapeHtml(entry.name)}</option>`).join("")}</select>${note}</label>`;
   const type = String(field?.type || "").toLowerCase().includes("date") ? "date" : ["integer", "double", "single", "float"].some((part) => String(field?.type || "").toLowerCase().includes(part)) ? "number" : "text";
   return `<label><span>${escapeHtml(label)}${required ? " *" : ""}</span><input id="${escapeHtml(id)}" type="${type}" value="${escapeHtml(value ?? "")}" ${field?.length ? `maxlength="${field.length}"` : ""} ${attrs}>${note}</label>`;
@@ -295,14 +315,15 @@ function showFacilityEditor(mode = "update") {
   state.facilityLocationMode = mode === "update" ? "retain" : "map";
   state.facilityGeocodePreview = null;
   elements.detail.innerHTML = `<form id="facilityEditForm" class="asset-edit-form" novalidate>
-    <div class="editor-heading"><div><p class="eyebrow">${mode === "add" ? "New facility" : "Editing facility"}</p><h2>${escapeHtml(record?.name || "Add facility")}</h2></div><button type="button" class="btn btn-quiet" id="cancelFacilityEdit">Cancel</button></div>
+    <div class="editor-heading"><div><p class="eyebrow">${mode === "add" ? "New facility" : "Editing facility"}</p><h2>${escapeHtml(record?.name || "Add facility")}</h2></div><div class="editor-heading-actions">${mode === "update" ? '<button type="button" class="btn btn-primary" id="addNewFacility">Add new</button>' : ""}<button type="button" class="btn btn-quiet" id="cancelFacilityEdit">Cancel</button></div></div>
     <p class="edit-boundary">Facility writes require sign-in, matching layer capability, editable fields, valid geometry, and an explicit Save facility action. Demo facilities are never persisted.</p>
+    <p class="editor-help">The form shows confidently mapped facility fields plus additional supported service fields. Object/global IDs, geometry and system-managed fields, noneditable fields, unsupported types, and ambiguous matches are excluded.</p>
     <fieldset><legend>Facility attributes</legend><div class="form-grid">${FACILITY_FIELDS.map((definition) => { const field = layer?.fields?.find((item) => item.name === bindings[definition.key]); return facilityFieldControl(definition, field, values[definition.key]); }).join("")}</div></fieldset>
     <fieldset><legend>Location</legend><div class="location-choices" role="radiogroup" aria-label="Facility location choice">
       ${mode === "update" ? '<label><input type="radio" name="facilityLocationMode" value="retain" checked> Retain existing geometry</label>' : ""}
       <label><input type="radio" name="facilityLocationMode" value="address"> Locate from address</label>
       <label><input type="radio" name="facilityLocationMode" value="map" ${mode === "add" ? "checked" : ""} ${compatibility.pointPlacement ? "" : "disabled"}> Place on map</label></div>
-      <div class="facility-location-actions"><button id="locateFacilityAddress" class="btn btn-quiet" type="button" ${mode === "add" ? "hidden" : "hidden"}>Locate address</button><button id="pickFacilityPoint" class="btn btn-quiet" type="button" ${mode === "add" && compatibility.pointPlacement ? "" : "hidden"}>Start map placement</button><button id="cancelFacilityPoint" class="btn btn-quiet" type="button" hidden>Cancel map placement</button></div>
+      ${coordinateFields("facility", state.facilityEditGeometry)}<div class="facility-location-actions"><button id="locateFacilityAddress" class="btn btn-quiet" type="button" hidden>Locate</button><button id="pickFacilityPoint" class="btn btn-quiet" type="button" ${mode === "add" && compatibility.pointPlacement ? "" : "hidden"}>Start map placement</button><button id="cancelFacilityPoint" class="btn btn-quiet" type="button" hidden>Cancel map placement</button></div>
       <p id="facilityLocationStatus" class="form-status" role="status">${compatibility.pointPlacement ? (mode === "update" ? "Existing geometry will be retained unless another option is selected." : "Choose Start map placement, then click once on the map. The preview is not saved yet.") : `Point placement is unavailable: ${escapeHtml(compatibility.reason)}`}</p>
     </fieldset>
     ${additional.length ? `<details class="additional-attributes"><summary>Additional attributes (${additional.length})</summary><div class="form-grid">${additional.map((field) => facilityFieldControl(null, field, record?.attributes?.[field.name], true)).join("")}</div></details>` : ""}
@@ -347,7 +368,7 @@ async function saveFacility(event) {
   try {
     let geometry = state.facilityEditGeometry;
     if (state.facilityLocationMode === "address") {
-      if (!state.facilityGeocodePreview) throw new Error("Use Locate address and review a match of at least 80 before saving.");
+      if (!state.facilityGeocodePreview) throw new Error("Use Locate and review a match of at least 80 before saving.");
       status.textContent = "Confirming address for persisted use…";
       geometry = (await geocodeFacility(true)).location;
     }
@@ -426,13 +447,13 @@ async function saveAssetEdit(event) {
       const address = extractFacilityAddress(facility); Object.assign(values, { locationName: address.name, address: address.address, city: address.city, state: address.state, zip: address.zip, facility: address.name });
       geometry = address.geometry; locationMethod = "Existing facility selected"; isMockLocation = false;
     } else if (state.editLocationMode === "address") {
-      if (!state.geocodePreview) throw new Error("Use Locate address and review a confident match before saving.");
+      if (!state.geocodePreview) throw new Error("Use Locate and review a confident match before saving.");
       setEditorStatus("Confirming address for persisted use…");
       const storedMatch = await geocodeEditor(true); geometry = storedMatch.location; locationMethod = "Geocoded address"; isMockLocation = false;
     }
     if (record.sourceType === "import") {
       const patch = { ...normalizedRecordPatch(values), geometry, locationMethod, isMockLocation };
-      state.stagedImport = updateImportSessionRecord(record.id, patch); consumeStagedImport(); renderAll(); showDetail(record.id);
+      state.stagedImport = updateImportSessionRecord(record.id, patch); consumeStagedImport(); clearPlacementPreview(); renderAll(); showDetail(record.id);
       toast("Imported asset updated in this browser session."); return;
     }
     const gate = serviceEditGate({ signedIn: state.signedIn, layer: state.resourceLayer, record }); if (!gate.allowed) throw new Error(gate.reason);
@@ -446,7 +467,7 @@ async function saveAssetEdit(event) {
     state.resourceLayer.refresh();
     const refreshed = await state.resourceLayer.queryFeatures({ objectIds: [record.objectId], outFields: ["*"], returnGeometry: true, outSpatialReference: { wkid: 4326 } });
     if (refreshed.features?.[0]) state.resources[state.resources.findIndex((item) => item.id === record.id)] = resourceFromFeature(refreshed.features[0], 0, state.resourceLayer.fields, state.resourceLayer.objectIdField);
-    renderAll(); showDetail(record.id); toast("Service asset updated successfully.");
+    clearPlacementPreview(); renderAll(); showDetail(record.id); toast("Service asset updated successfully.");
   } catch (error) { setEditorStatus(error.message, "error"); submit.disabled = false; }
 }
 
@@ -665,26 +686,35 @@ function bindEvents() {
   elements.detail.addEventListener("click", async (event) => {
     if (event.target.closest("#editAssetButton")) showAssetEditor();
     if (event.target.closest("#editFacilityButton")) showFacilityEditor("update");
+    if (event.target.closest("#addNewFacility")) showFacilityEditor("add");
     if (event.target.closest("#removeFacilityButton")) openRemoveFacilityDialog(recordById(state.selectedId));
-    if (event.target.closest("#cancelAssetEdit, #cancelAssetEdit2")) showDetail(state.selectedId);
+    if (event.target.closest("#cancelAssetEdit, #cancelAssetEdit2")) { cancelPointSelection(); clearPlacementPreview(); showDetail(state.selectedId); }
     if (event.target.closest("#cancelFacilityEdit, #cancelFacilityEdit2")) { cancelPointSelection(); clearPlacementPreview(); state.facilityEditMode === "update" ? showDetail(state.selectedId) : (elements.detail.innerHTML = '<div class="empty-state"><strong>Select a record</strong><p>Facility creation was canceled.</p></div>'); }
+    if (event.target.closest("#pickAssetPoint")) {
+      const start = byId("pickAssetPoint"); const cancel = byId("cancelAssetPoint");
+      start.disabled = true; cancel.hidden = false; byId("editLocationStatus").textContent = "Map placement active: click once on the map to preview the asset point, or cancel.";
+      try { const point = await startPointSelection(); state.editGeometry = point; updateCoordinateFields("asset", point); byId("editLocationStatus").textContent = "Point selected and previewed. It will be used only after Save changes succeeds."; }
+      catch (error) { const status = byId("editLocationStatus"); if (status) status.textContent = error.message; }
+      finally { if (byId("pickAssetPoint")) { start.disabled = false; cancel.hidden = true; } }
+    }
+    if (event.target.closest("#cancelAssetPoint")) { cancelPointSelection(); byId("editLocationStatus").textContent = "Map placement canceled. Existing unsaved geometry was not changed."; }
     if (event.target.closest("#pickFacilityPoint")) {
       const start = byId("pickFacilityPoint"); const cancel = byId("cancelFacilityPoint");
       start.disabled = true; cancel.hidden = false; byId("facilityLocationStatus").textContent = "Map placement active: click once on the map to preview the facility point, or cancel.";
-      try { const point = await startPointSelection(); state.facilityEditGeometry = point; byId("facilityLocationStatus").textContent = "Point selected and previewed. It will be used only after Save facility succeeds."; updateFacilitySaveGate(); }
+      try { const point = await startPointSelection(); state.facilityEditGeometry = point; updateCoordinateFields("facility", point); byId("facilityLocationStatus").textContent = "Point selected and previewed. It will be used only after Save facility succeeds."; updateFacilitySaveGate(); }
       catch (error) { const status = byId("facilityLocationStatus"); if (status) status.textContent = error.message; }
       finally { if (byId("pickFacilityPoint")) { start.disabled = false; cancel.hidden = true; } }
     }
     if (event.target.closest("#cancelFacilityPoint")) { cancelPointSelection(); byId("facilityLocationStatus").textContent = "Map placement canceled. Existing unsaved geometry was not changed."; }
     if (event.target.closest("#locateFacilityAddress")) {
       const button = byId("locateFacilityAddress"); button.disabled = true; byId("facilityLocationStatus").textContent = "Locating address for preview…";
-      try { const match = await geocodeFacility(false); state.facilityGeocodePreview = match; state.facilityEditGeometry = match.location; setPlacementPreview(match.location); byId("facilityLocationStatus").textContent = `Confident match (${match.score}/100): ${match.address || match.attributes?.Match_addr || "address located"}. Geometry will move only if Save facility succeeds.`; updateFacilitySaveGate(); }
+      try { const match = await geocodeFacility(false); state.facilityGeocodePreview = match; state.facilityEditGeometry = match.location; setPlacementPreview(match.location); updateCoordinateFields("facility", match.location); byId("facilityLocationStatus").textContent = `Confident match (${match.score}/100): ${match.address || match.attributes?.Match_addr || "address located"}. Geometry will move only if Save facility succeeds.`; updateFacilitySaveGate(); }
       catch (error) { state.facilityGeocodePreview = null; byId("facilityLocationStatus").textContent = error.message; }
       finally { button.disabled = false; }
     }
     if (event.target.closest("#locateAddress")) {
       const button = event.target.closest("#locateAddress"); button.disabled = true; byId("editLocationStatus").textContent = "Locating address for preview…";
-      try { const match = await geocodeEditor(false); state.geocodePreview = match; state.editGeometry = match.location; byId("editLocationStatus").textContent = `Confident match (${match.score}/100): ${match.address || match.attributes?.Match_addr || "address located"}. Geometry will move only if Save changes succeeds.`; }
+      try { const match = await geocodeEditor(false); state.geocodePreview = match; state.editGeometry = match.location; setPlacementPreview(match.location); updateCoordinateFields("asset", match.location); byId("editLocationStatus").textContent = `Confident match (${match.score}/100): ${match.address || match.attributes?.Match_addr || "address located"}. Geometry will move only if Save changes succeeds.`; }
       catch (error) { state.geocodePreview = null; byId("editLocationStatus").textContent = error.message; }
       finally { button.disabled = false; }
     }
@@ -694,20 +724,21 @@ function bindEvents() {
       cancelPointSelection(); state.facilityLocationMode = event.target.value; state.facilityGeocodePreview = null;
       const locate = byId("locateFacilityAddress"); const pick = byId("pickFacilityPoint"); const cancel = byId("cancelFacilityPoint");
       locate.hidden = state.facilityLocationMode !== "address"; pick.hidden = state.facilityLocationMode !== "map"; cancel.hidden = true;
-      if (state.facilityLocationMode === "retain") { const record = recordById(state.selectedId); state.facilityEditGeometry = record?.geometry || null; setPlacementPreview(state.facilityEditGeometry); }
-      byId("facilityLocationStatus").textContent = state.facilityLocationMode === "retain" ? "Existing geometry will be retained." : state.facilityLocationMode === "address" ? "Review the address fields, then choose Locate address. No movement occurs before Save facility." : "Choose Start map placement, then click once on the map. The point remains a preview until Save facility.";
+      if (state.facilityLocationMode === "retain") { const record = recordById(state.selectedId); state.facilityEditGeometry = record?.geometry || null; setPlacementPreview(state.facilityEditGeometry); updateCoordinateFields("facility", state.facilityEditGeometry); }
+      byId("facilityLocationStatus").textContent = state.facilityLocationMode === "retain" ? "Existing geometry will be retained." : state.facilityLocationMode === "address" ? "Review the address fields, then choose Locate. No movement occurs before Save facility." : "Choose Start map placement, then click once on the map. The point remains a preview until Save facility.";
       updateFacilitySaveGate();
     }
     if (byId("facilityEditForm") && ["address", "city", "state", "zip"].includes(event.target.name) && state.facilityLocationMode === "address") { state.facilityGeocodePreview = null; byId("facilityLocationStatus").textContent = "Address changed. Locate it again before saving."; }
     if (event.target.name === "locationMode") {
-      state.editLocationMode = event.target.value; state.geocodePreview = null;
-      byId("facilityChoice").hidden = state.editLocationMode !== "facility"; byId("locateAddress").hidden = state.editLocationMode !== "address";
-      byId("editLocationStatus").textContent = state.editLocationMode === "current" ? "Current geometry will be retained." : state.editLocationMode === "facility" ? "Choose a loaded facility to copy its address and geometry." : "Enter the address and use Locate address. No geometry changes until Save succeeds.";
+      cancelPointSelection(); state.editLocationMode = event.target.value; state.geocodePreview = null;
+      byId("facilityChoice").hidden = state.editLocationMode !== "facility"; byId("locateAddress").hidden = state.editLocationMode !== "address"; byId("pickAssetPoint").hidden = state.editLocationMode !== "map"; byId("cancelAssetPoint").hidden = true;
+      if (state.editLocationMode === "current") { const record = recordById(state.selectedId); state.editGeometry = record?.geometry || null; setPlacementPreview(state.editGeometry); updateCoordinateFields("asset", state.editGeometry); }
+      byId("editLocationStatus").textContent = state.editLocationMode === "current" ? "Current geometry will be retained." : state.editLocationMode === "facility" ? "Choose a loaded facility to copy its address and geometry." : state.editLocationMode === "address" ? "Enter the address and choose Locate. No geometry changes until Save succeeds." : "Choose Start map placement, then click once on the map. The point remains a preview until Save changes.";
     }
     if (event.target.id === "editFacility") {
       const facility = currentFacilities().find((item) => item.id === event.target.value); if (!facility) return;
       const address = extractFacilityAddress(facility); for (const [key, value] of Object.entries({ locationName: address.name, address: address.address, city: address.city, state: address.state, zip: address.zip })) { const input = byId(`edit-${key}`); if (input) input.value = value; }
-      state.editGeometry = address.geometry; byId("editLocationStatus").textContent = address.geometry ? "Facility address and geometry are ready. Save to apply them to this asset." : "Facility address was copied, but the facility has no usable geometry.";
+      state.editGeometry = address.geometry; setPlacementPreview(address.geometry); updateCoordinateFields("asset", address.geometry); byId("editLocationStatus").textContent = address.geometry ? "Facility address and geometry are ready. Save to apply them to this asset." : "Facility address was copied, but the facility has no usable geometry.";
     }
     if (state.editLocationMode === "address" && ["address", "city", "state", "zip"].includes(event.target.name)) { state.geocodePreview = null; byId("editLocationStatus").textContent = "Address changed. Locate it again before saving."; }
   });
@@ -724,16 +755,16 @@ async function main() {
     state.stagedImport = readImportSession();
     elements.sourceFilter.value = state.config.operatorDefaults?.defaultSourceFilter || "";
     elements.mockedToggle.checked = state.config.operatorDefaults?.showMockedPoints !== false;
-    await initializeMap(state.config, showDetail);
-    setMockedVisible(elements.mockedToggle.checked);
     const auth = await initializeAuth(state.config);
     state.signedIn = auth.signedIn;
     state.oauthConfigured = auth.oauthConfigured;
     elements.authStatus.textContent = auth.signedIn ? "Signed in session found" : auth.oauthConfigured ? "Not signed in · OAuth configured" : "OAuth not configured";
     elements.signInButton.disabled = !auth.oauthConfigured;
     elements.signOutButton.hidden = !auth.signedIn;
+    await initializeMap(state.config, showDetail);
+    setMockedVisible(elements.mockedToggle.checked);
     window.__app = {
-      version: "1.2.0-facility-crud-map-placement",
+      version: "1.3.0-webmap-ui-optimization",
       getState: () => ({ ...state, resources: [...state.resources], facilities: [...state.facilities], imported: [...state.imported] }),
       loadOperationalData,
       showDetail,
