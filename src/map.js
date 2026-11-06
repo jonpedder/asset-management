@@ -312,6 +312,38 @@ export function startPointSelection() {
   return new Promise((resolve, reject) => { pointSelection = { resolve, reject }; });
 }
 
+function waitForMapIdle(timeout = 10000) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const check = () => { if (!view?.updating || Date.now() - started >= timeout) resolve(); else setTimeout(check, 100); };
+    check();
+  });
+}
+export async function captureResourceReportMap(records = []) {
+  if (!view || !map) return null;
+  const located = records.filter((record) => record?.geometry);
+  if (!located.length) return null;
+  const originalViewpoint = view.viewpoint.clone();
+  const hiddenLayers = [...serviceLayers, importedLayer, mockedLayer, demoLayer].filter(Boolean).map((layer) => ({ layer, visible: layer.visible }));
+  const reportLayer = new GraphicsLayer({ id: `report-${Date.now()}`, title: "Report resources", listMode: "hide" });
+  located.forEach((record) => reportLayer.add(new Graphic({ geometry: record.geometry, symbol: resourceGraphicSymbol(record), attributes: { title: record.assetType || "Resource" } })));
+  try {
+    hiddenLayers.forEach(({ layer }) => { layer.visible = false; });
+    map.add(reportLayer);
+    await view.goTo(reportLayer.graphics, { padding: 55, duration: 0 });
+    await waitForMapIdle();
+    const screenshot = await view.takeScreenshot({ width: 1200, height: 490, format: "jpg", quality: .9 });
+    const encoded = screenshot.dataUrl.split(",")[1] || "";
+    const binary = atob(encoded);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return { bytes, width: screenshot.data.width, height: screenshot.data.height };
+  } finally {
+    map.remove(reportLayer);
+    hiddenLayers.forEach(({ layer, visible }) => { layer.visible = visible; });
+    await view.goTo(originalViewpoint, { duration: 0 }).catch(() => {});
+  }
+}
+
 export async function focusRecord(record) {
   if (!record?.geometry || !view) return;
   if (!selectionReturnViewpoint) selectionReturnViewpoint = view.viewpoint.clone();

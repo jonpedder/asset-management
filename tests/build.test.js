@@ -24,6 +24,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(app, /elements\.signInButton\.hidden = authenticated/);
   assert.match(map, /selectionReturnViewpoint = view\.viewpoint\.clone\(\)/); assert.match(map, /export async function restoreListView/); assert.match(map, /view\.goTo\(viewpoint/);
   assert.match(map, /function facilityResourceElement/); assert.match(map, /Available resources by type/); assert.match(map, /type: "custom"/);
+  assert.match(map, /export async function captureResourceReportMap/); assert.match(map, /view\.takeScreenshot/); assert.match(map, /map\.remove\(reportLayer\)/);
   assert.equal(config.webMapItemId, "4cf195324bbb4c65b4defe7ae4b935bc");
   assert.equal(config.layers.resources, 0);
   assert.equal(config.layers.facilities, 1);
@@ -42,6 +43,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(styles, /\.detail-panel\s*\{[^}]*position:\s*absolute[^}]*translateX\(100%\)/);
   assert.match(styles, /\.detail-panel\.open\s*\{[^}]*translateX\(0\)/);
   assert.match(styles, /tbody tr\.selected-row\s*\{[^}]*var\(--app-accent\)[^}]*0 0 10px/);
+  assert.match(styles, /\.header-report-group\s*\{[^}]*display:\s*flex/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {

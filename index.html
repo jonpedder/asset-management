@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261106-13">
+  <link rel="stylesheet" href="./styles/app.css?v=20261106-14">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
   <script type="module" src="./src/app.js?v=20261106-22"></script>
 </head>
@@ -29,6 +29,7 @@
         <span><strong id="sessionUser">Not signed in</strong><small id="sessionState">Authentication required</small></span>
       </div>
       <button class="btn" id="signInButton" type="button">Sign in</button>
+      <div class="header-report-group" aria-label="Reports"><label for="reportType">Reports</label><select id="reportType" disabled><option value="" selected>Select report</option><option value="summary">Summary report</option><option value="facility">Resources at a facility</option><option value="available">Resources available</option></select><button id="exportReportButton" class="btn btn-primary report-pdf-button" type="button" disabled>PDF</button></div>
       <div class="header-data-status" role="status" aria-live="polite">
         <span class="header-data-line"><strong>Data:</strong> <span id="serviceStatus">Anonymous access attempt pending</span></span>
         <span id="lastUpdated">Not loaded</span>

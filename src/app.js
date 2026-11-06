@@ -3,7 +3,7 @@ import { readImportSession, updateImportSessionRecord, updateImportSessionRecord
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView } from "./map.js?v=20261106-14";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView, captureResourceReportMap } from "./map.js?v=20261106-15";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
@@ -14,6 +14,8 @@ import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
 import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-3";
+import { availableResourcesReport, isResourceAvailable, reportSummary, resourceFacilityName, resourcesAtFacilitiesReport } from "./report-data.js?v=20261106-1";
+import { buildInventoryReportPdf, loadPdfImage } from "./report-pdf.js?v=20261106-1";
 
 const state = {
   config: null,
@@ -49,7 +51,7 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "resourceCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detailPanel", "detailClose", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
+  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "reportType", "exportReportButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "resourceCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detailPanel", "detailClose", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -214,6 +216,7 @@ function renderResources() {
   if (!records.length) {
     elements.resourceRows.innerHTML = '<tr><td colspan="7" class="empty-cell">No inventory records match the current filters.</td></tr>';
     updateBulkControls();
+    updateReportAvailability();
     return;
   }
   elements.resourceRows.innerHTML = records.map((record) => {
@@ -231,6 +234,7 @@ function renderResources() {
   }).join("");
   syncSelectedRows();
   updateBulkControls();
+  updateReportAvailability();
 }
 
 function renderFacilities() {
@@ -246,6 +250,7 @@ function renderFacilities() {
     </tr>`;
   }).join("") : '<tr><td colspan="4" class="empty-cell">No facilities are loaded.</td></tr>';
   syncSelectedRows();
+  updateReportAvailability();
 }
 
 function recordById(id) {
@@ -263,6 +268,7 @@ function closeDetailPanel() {
   elements.detailPanel.setAttribute("aria-hidden", "true");
   state.selectedId = null;
   syncSelectedRows();
+  updateReportAvailability();
   restoreListView();
 }
 function showDetail(id) {
@@ -271,6 +277,7 @@ function showDetail(id) {
   openDetailPanel();
   state.selectedId = id;
   syncSelectedRows();
+  updateReportAvailability();
   const isFacility = Boolean(record.name && !record.assetType);
   const facilityAddress = isFacility ? extractFacilityAddress(record) : null;
   const attributes = Object.entries(record.attributes || {}).filter(([, value]) => value != null && String(value).trim()).slice(0, 12);
@@ -648,6 +655,65 @@ function renderAll() {
   renderResources();
   renderFacilities();
   updateMetrics();
+  updateReportAvailability();
+}
+
+function reportScopedResources() {
+  let resources = filteredResourceRecords();
+  const selected = recordById(state.selectedId);
+  if (selected && !selected.assetType) {
+    const facility = String(selected.name || "").trim().toLowerCase();
+    resources = resources.filter((record) => String(resourceFacilityName(record)).trim().toLowerCase() === facility);
+  }
+  return resources;
+}
+function reportScopeLabel() {
+  const filters = currentResourceFilters();
+  const parts = Object.entries(filters).filter(([, value]) => String(value || "").trim()).map(([name, value]) => `${name}: ${value}`);
+  const selected = recordById(state.selectedId);
+  if (selected && !selected.assetType) parts.push(`selected facility: ${selected.name}`);
+  return parts.length ? parts.join("; ") : "All records currently shown in the lists";
+}
+function updateReportAvailability() {
+  const resources = reportScopedResources();
+  elements.reportType.disabled = !resources.length && !currentFacilities().length;
+  const kind = elements.reportType.value;
+  elements.exportReportButton.disabled = !kind || (kind === "available" ? !resources.some(isResourceAvailable) : kind === "facility" ? !resources.length : !resources.length && !currentFacilities().length);
+}
+function downloadReport(blob, name) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${name}-${new Date().toISOString().slice(0, 10)}.pdf`;
+  document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+async function exportSelectedReport() {
+  const kind = elements.reportType.value;
+  if (!kind) return;
+  const button = elements.exportReportButton;
+  button.disabled = true; button.textContent = "…"; button.setAttribute("aria-busy", "true");
+  try {
+    const resources = reportScopedResources();
+    const scope = reportScopeLabel();
+    const facilities = (() => {
+      const selected = recordById(state.selectedId);
+      return selected && !selected.assetType ? [selected] : currentFacilities();
+    })();
+    let report; let fileName; let mapImage = null;
+    if (kind === "summary") { report = reportSummary(resources, facilities, scope); fileName = "inventory-summary"; }
+    else if (kind === "facility") { report = resourcesAtFacilitiesReport(resources, scope); fileName = "resources-at-facility"; }
+    else {
+      report = availableResourcesReport(resources, scope);
+      fileName = "resources-available";
+      mapImage = await captureResourceReportMap(report.records);
+    }
+    const logo = await loadPdfImage(state.config.branding?.logoUrl || "").catch(() => null);
+    const branding = { appName: state.config.branding?.appName, subtitle: state.config.branding?.subtitle, logo, mapImage, colors: state.config.branding?.colors };
+    const blob = buildInventoryReportPdf(report, new Date(), branding);
+    downloadReport(blob, fileName);
+    toast(`${report.title} downloaded.`, "success");
+  } catch (error) { toast(error.message || "The report could not be generated.", "error"); }
+  finally { button.textContent = "PDF"; button.removeAttribute("aria-busy"); updateReportAvailability(); }
 }
 
 function consumeStagedImport() {
@@ -747,6 +813,8 @@ function bindEvents() {
     signOut();
     window.location.reload();
   });
+  elements.reportType.addEventListener("change", updateReportAvailability);
+  elements.exportReportButton.addEventListener("click", exportSelectedReport);
   elements.demoButton.addEventListener("click", () => {
     if (state.serviceAvailable) return;
     state.demoActive = true;
