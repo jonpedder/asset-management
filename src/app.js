@@ -659,7 +659,7 @@ function renderAll() {
 }
 
 function reportScopedResources() {
-  let resources = filteredResourceRecords();
+  let resources = filterResourceRecords(allResourceRecords(), currentResourceFilters());
   const selected = recordById(state.selectedId);
   if (selected && !selected.assetType) {
     const facility = String(selected.name || "").trim().toLowerCase();

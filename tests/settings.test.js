@@ -53,7 +53,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   assert.match(app, /elements\.resourceCount\.textContent = allRecords\.length/);
   assert.match(app, /function openDetailPanel/); assert.match(app, /function closeDetailPanel/); assert.match(app, /detailClose\.addEventListener\("click", closeDetailPanel\)/);
   assert.match(app, /function syncSelectedRows/); assert.match(app, /selected-row/); assert.match(app, /restoreListView\(\)/);
-  assert.match(app, /function reportScopedResources/); assert.match(app, /function exportSelectedReport/); assert.match(app, /captureResourceReportMap\(report\.records\)/); assert.match(app, /buildInventoryReportPdf/);
+  assert.match(app, /function reportScopedResources/); assert.match(app, /filterResourceRecords\(allResourceRecords\(\), currentResourceFilters\(\)\)/); assert.doesNotMatch(app, /filteredResourceRecords/); assert.match(app, /function exportSelectedReport/); assert.match(app, /captureResourceReportMap\(report\.records\)/); assert.match(app, /buildInventoryReportPdf/);
   assert.match(app, /state\.config\?\.symbols\?\.resourceIconUrl/); assert.match(app, /state\.config\?\.symbols\?\.facilityIconUrl/);
   assert.match(app, /resetSortOrder\.addEventListener\("click"[\s\S]*resourceSort = \{ key: null[\s\S]*facilitySort = \{ key: null/);
   assert.equal((app.match(/<details class="editing-information">/g) || []).length, 2);
