@@ -3,7 +3,7 @@ import { readImportSession, updateImportSessionRecord, updateImportSessionRecord
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js?v=20261106-12";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView } from "./map.js?v=20261106-13";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
@@ -189,6 +189,13 @@ function syncSortResetButton() {
   elements.resetSortOrder.disabled = !active;
   elements.resetSortOrder.title = active ? "Restore the original resource and facility list order" : "The lists are already in their original order";
 }
+function syncSelectedRows() {
+  document.querySelectorAll("tr[data-record-id]").forEach((row) => {
+    const selected = row.dataset.recordId === state.selectedId;
+    row.classList.toggle("selected-row", selected);
+    if (selected) row.setAttribute("aria-current", "true"); else row.removeAttribute("aria-current");
+  });
+}
 function renderResources() {
   const allRecords = allResourceRecords();
   elements.resourceCount.textContent = allRecords.length;
@@ -222,6 +229,7 @@ function renderResources() {
       <td>${sourceLabel(record)}</td>
     </tr>`;
   }).join("");
+  syncSelectedRows();
   updateBulkControls();
 }
 
@@ -237,6 +245,7 @@ function renderFacilities() {
       <td><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(iconUrl)}" alt=""><span><strong>${escapeHtml(record.name)}</strong></span></div></td><td>${escapeHtml(record.type)}</td><td>${escapeHtml(record.status)}</td><td>${sourceLabel(record)}</td>
     </tr>`;
   }).join("") : '<tr><td colspan="4" class="empty-cell">No facilities are loaded.</td></tr>';
+  syncSelectedRows();
 }
 
 function recordById(id) {
@@ -253,12 +262,15 @@ function closeDetailPanel() {
   elements.detailPanel.classList.remove("open");
   elements.detailPanel.setAttribute("aria-hidden", "true");
   state.selectedId = null;
+  syncSelectedRows();
+  restoreListView();
 }
 function showDetail(id) {
   const record = recordById(id);
   if (!record) return;
   openDetailPanel();
   state.selectedId = id;
+  syncSelectedRows();
   const isFacility = Boolean(record.name && !record.assetType);
   const facilityAddress = isFacility ? extractFacilityAddress(record) : null;
   const attributes = Object.entries(record.attributes || {}).filter(([, value]) => value != null && String(value).trim()).slice(0, 12);
@@ -620,6 +632,7 @@ async function applyBulkFacility() {
 }
 
 function setInventoryType(type) {
+  if (state.inventoryType !== type && state.selectedId) closeDetailPanel();
   state.inventoryType = type;
   const resources = type === "resources";
   elements.resourceTab.setAttribute("aria-selected", resources);
@@ -792,6 +805,7 @@ function bindEvents() {
     const row = event.target.closest("tr[data-record-id]");
     if (!row || (event.type === "keydown" && !["Enter", " "].includes(event.key))) return;
     if (event.type === "keydown") event.preventDefault();
+    if (row.dataset.recordId === state.selectedId && elements.detailPanel.classList.contains("open")) { closeDetailPanel(); return; }
     showDetail(row.dataset.recordId);
   };
   elements.resourceRows.addEventListener("click", activateRow);

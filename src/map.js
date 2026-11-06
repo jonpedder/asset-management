@@ -16,6 +16,7 @@ let selectHandler = () => {};
 let pointSelection = null;
 let resourceIconOverride = "";
 let facilityIconOverride = "";
+let selectionReturnViewpoint = null;
 
 const symbols = {
   imported: { type: "simple-marker", style: "circle", size: 10, color: "#f2a900", outline: { color: "#071824", width: 1.5 } },
@@ -261,6 +262,7 @@ export function startPointSelection() {
 
 export async function focusRecord(record) {
   if (!record?.geometry || !view) return;
+  if (!selectionReturnViewpoint) selectionReturnViewpoint = view.viewpoint.clone();
   try {
     await view.goTo({ target: record.geometry, zoom: Math.max(view.zoom, 13) }, { duration: 500 });
     let feature = null;
@@ -280,4 +282,13 @@ export async function focusRecord(record) {
   } catch {
     // Selection details still remain available if navigation or popup loading fails.
   }
+}
+
+export async function restoreListView() {
+  if (!view) return;
+  view.closePopup();
+  const viewpoint = selectionReturnViewpoint;
+  selectionReturnViewpoint = null;
+  if (!viewpoint) return;
+  try { await view.goTo(viewpoint, { duration: 500 }); } catch { /* View remains usable if navigation is interrupted. */ }
 }

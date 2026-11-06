@@ -135,6 +135,8 @@ th { position: sticky; top: 0; z-index: 1; padding: .38rem .65rem .5rem; backgro
 td { padding: .62rem .65rem; border-bottom: 1px solid var(--app-border); color: var(--app-muted); vertical-align: top; }
 tbody tr { cursor: pointer; }
 tbody tr:hover, tbody tr:focus { background: var(--app-panel-2); box-shadow: inset 3px 0 var(--app-accent); }
+tbody tr.selected-row { background: rgba(242,169,0,.08); box-shadow: inset 3px 0 var(--app-accent), inset 0 1px rgba(242,169,0,.22), inset 0 -1px rgba(242,169,0,.18), 0 0 10px rgba(242,169,0,.12); }
+tbody tr.selected-row td { color: var(--app-text); }
 td strong { color: var(--app-text); }
 .resource-name { display: flex; align-items: center; gap: .5rem; min-width: 145px; }
 .resource-name > span { min-width: 0; }

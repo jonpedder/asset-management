@@ -17,7 +17,7 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   assert.match(html, /Asset Type is required/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
   assert.match(html, /id="resourceIconUrl"/); assert.match(html, /id="facilityIconUrl"/); assert.match(html, /id="resourceIconPreview"/); assert.match(html, /id="facilityIconPreview"/);
   assert.match(html, /id="webMapItemId"/); assert.match(html, /id="webMapUrl"/); assert.match(html, /Feature service REST URL/);
-  assert.match(html, /Sorting, filtering, resizing, map symbols, and editing/); assert.match(html, /Reset sort order restores both lists/); assert.match(html, /Editing Information banner is collapsed by default/);
+  assert.match(html, /Sorting, filtering, resizing, map symbols, and editing/); assert.match(html, /Reset sort order restores both lists/); assert.match(html, /Editing Information banner is collapsed by default/); assert.match(html, /row highlighted with a subtle amber glow/); assert.match(html, /return to the previous map viewpoint/);
   assert.equal((html.match(/<\/body><\/html>/g) || []).length, 1);
 });
 
@@ -49,6 +49,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
   assert.match(app, /elements\.resourceCount\.textContent = allRecords\.length/);
   assert.match(app, /function openDetailPanel/); assert.match(app, /function closeDetailPanel/); assert.match(app, /detailClose\.addEventListener\("click", closeDetailPanel\)/);
+  assert.match(app, /function syncSelectedRows/); assert.match(app, /selected-row/); assert.match(app, /restoreListView\(\)/);
   assert.match(app, /state\.config\?\.symbols\?\.resourceIconUrl/); assert.match(app, /state\.config\?\.symbols\?\.facilityIconUrl/);
   assert.match(app, /resetSortOrder\.addEventListener\("click"[\s\S]*resourceSort = \{ key: null[\s\S]*facilitySort = \{ key: null/);
   assert.equal((app.match(/<details class="editing-information">/g) || []).length, 2);

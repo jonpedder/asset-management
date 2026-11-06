@@ -6,6 +6,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const auth = await readFile(new URL("../src/auth.js", import.meta.url), "utf8");
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const map = await readFile(new URL("../src/map.js", import.meta.url), "utf8");
   const styles = await readFile(new URL("../styles/app.css", import.meta.url), "utf8");
   const config = JSON.parse(await readFile(new URL("../config/app.json", import.meta.url), "utf8"));
   assert.match(html, /<script type="module" src="https:\/\/js\.arcgis\.com\/5\.1\/"><\/script>/);
@@ -21,6 +22,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(html, /id="sessionUser">Not signed in<\/strong>/);
   assert.match(app, /Authenticated · \$\{username\}/);
   assert.match(app, /elements\.signInButton\.hidden = authenticated/);
+  assert.match(map, /selectionReturnViewpoint = view\.viewpoint\.clone\(\)/); assert.match(map, /export async function restoreListView/); assert.match(map, /view\.goTo\(viewpoint/);
   assert.equal(config.webMapItemId, "4cf195324bbb4c65b4defe7ae4b935bc");
   assert.equal(config.layers.resources, 0);
   assert.equal(config.layers.facilities, 1);
@@ -38,6 +40,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(styles, /\.sort-reset-button\s*\{[^}]*border:\s*1px solid var\(--app-accent\)[^}]*color:\s*var\(--app-accent\)/);
   assert.match(styles, /\.detail-panel\s*\{[^}]*position:\s*absolute[^}]*translateX\(100%\)/);
   assert.match(styles, /\.detail-panel\.open\s*\{[^}]*translateX\(0\)/);
+  assert.match(styles, /tbody tr\.selected-row\s*\{[^}]*var\(--app-accent\)[^}]*0 0 10px/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {
