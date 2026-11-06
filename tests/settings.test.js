@@ -43,7 +43,7 @@ test("main page has no import dialog and places a square settings cog at the far
   assert.match(html, /id="resourceTab"[\s\S]*id="resourceCount"[\s\S]*id="facilityTab"[\s\S]*id="facilityCount"/);
   assert.match(html, /id="bulkHeading">Bulk facility assignment[\s\S]*id="resetSortOrder"[\s\S]*Reset sort order/);
   assert.match(html, /class="resource-sort-toolbar"/); assert.match(html, /id="resourceRows"[\s\S]*colspan="2"/);
-  assert.match(html, /id="reportType"[\s\S]*Summary report[\s\S]*Resources at a facility[\s\S]*Resources available/); assert.match(html, /id="exportReportButton"/);
+  assert.match(html, /id="reportType"[\s\S]*Summary report[\s\S]*Resources at a facility[\s\S]*Resources available/); assert.match(html, /id="reportType"[\s\S]*id="sessionChip"/); assert.match(html, /id="exportReportButton"/);
   assert.match(html, /id="detailPanel"[^>]*aria-hidden="true"/); assert.match(html, /id="detailClose"/);
 });
 
