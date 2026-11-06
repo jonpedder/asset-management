@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261106-6">
+  <link rel="stylesheet" href="./styles/app.css?v=20261106-7">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
   <script type="module" src="./src/app.js?v=20261106-13"></script>
 </head>
@@ -61,10 +61,13 @@
       </div>
       <section id="resourcePanel" role="tabpanel" aria-labelledby="resourceTab" class="inventory-content">
         <section class="bulk-toolbar" aria-labelledby="bulkHeading">
-          <button id="bulkToggle" class="bulk-toggle" type="button" aria-expanded="false" aria-controls="bulkContent">
-            <span><strong id="bulkHeading">Bulk facility assignment</strong><small id="selectedCount">0 assets selected · filters and assignment controls</small></span>
-            <span class="bulk-arrow" aria-hidden="true">▶</span>
-          </button>
+          <div class="bulk-toolbar-row">
+            <button id="bulkToggle" class="bulk-toggle" type="button" aria-expanded="false" aria-controls="bulkContent">
+              <span><strong id="bulkHeading">Bulk facility assignment</strong><small id="selectedCount">0 assets selected · filters and assignment controls</small></span>
+              <span class="bulk-arrow" aria-hidden="true">▶</span>
+            </button>
+            <button id="resetSortOrder" class="sort-reset-button" type="button" disabled>Reset sort order</button>
+          </div>
           <div id="bulkContent" class="bulk-content" hidden>
             <div class="filters">
               <label><span>Search inventory</span><input id="resourceSearch" type="search" placeholder="Asset, department, category…" autocomplete="off"></label>

@@ -103,8 +103,12 @@ input[type="search"], input[type="file"], select { width: 100%; min-height: 36px
 .filter-clear { align-self: end; }
 .active-filters { grid-column: 1 / -1; margin: 0; color: var(--app-accent); font-size: .65rem; }
 .bulk-toolbar { border-bottom: 1px solid var(--app-border); background: var(--app-bg); }
-.bulk-toggle { width: 100%; min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .55rem .7rem; border: 0; background: transparent; color: var(--app-text); text-align: left; cursor: pointer; }
+.bulk-toolbar-row { display: flex; align-items: center; min-width: 0; }
+.bulk-toggle { width: auto; min-width: 0; flex: 1; min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .55rem .7rem; border: 0; background: transparent; color: var(--app-text); text-align: left; cursor: pointer; }
 .bulk-toggle:hover { background: var(--app-panel-2); }
+.sort-reset-button { flex: 0 0 auto; min-height: 26px; margin-right: .55rem; padding: .25rem .45rem; border: 1px solid var(--app-border); border-radius: 2px; background: transparent; color: var(--app-muted); font-size: .58rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.sort-reset-button:hover:not(:disabled), .sort-reset-button:focus-visible { border-color: var(--app-accent); color: var(--app-accent); background: var(--app-panel-2); outline: none; }
+.sort-reset-button:disabled { opacity: .4; cursor: not-allowed; }
 .bulk-toggle strong, .bulk-toggle small { display: block; }
 .bulk-toggle strong { font-size: .72rem; }
 .bulk-toggle small, .bulk-preview, .bulk-status { color: var(--app-muted); font-size: .64rem; }

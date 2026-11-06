@@ -48,7 +48,7 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
+  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -183,12 +183,18 @@ function syncSortButtons(table, sort) {
     button.setAttribute("aria-pressed", String(active));
   });
 }
+function syncSortResetButton() {
+  const active = Boolean(state.resourceSort.key || state.facilitySort.key);
+  elements.resetSortOrder.disabled = !active;
+  elements.resetSortOrder.title = active ? "Restore the original resource and facility list order" : "The lists are already in their original order";
+}
 function renderResources() {
   const allRecords = allResourceRecords();
   state.selectedResourceIds = cleanSelectedIds(state.selectedResourceIds, allRecords);
   const filters = currentResourceFilters();
   const records = sortRows(filterResourceRecords(allRecords, filters), state.resourceSort, resourceSortAccessors);
   syncSortButtons("resources", state.resourceSort);
+  syncSortResetButton();
   state.visibleResourceIds = records.map((record) => record.id);
   elements.inventoryCount.textContent = records.length;
   const active = [["search", filters.search], ["source", filters.source], ["facility", filters.facility], ["city", filters.city], ["ZIP", filters.zip]].filter(([, value]) => String(value).trim());
@@ -220,6 +226,7 @@ function renderResources() {
 function renderFacilities() {
   const records = sortRows(currentFacilities(), state.facilitySort, facilitySortAccessors);
   syncSortButtons("facilities", state.facilitySort);
+  syncSortResetButton();
   elements.facilityCount.textContent = records.length;
   elements.facilityRows.innerHTML = records.length ? records.map((record) => `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.name)} details">
@@ -722,6 +729,12 @@ function bindEvents() {
     if (button.dataset.sortTable === "resources") { state.resourceSort = sort; renderResources(); }
     else { state.facilitySort = sort; renderFacilities(); }
   }));
+  elements.resetSortOrder.addEventListener("click", () => {
+    state.resourceSort = { key: null, direction: "asc" };
+    state.facilitySort = { key: null, direction: "asc" };
+    renderResources();
+    renderFacilities();
+  });
   elements.resourceSearch.addEventListener("input", renderResources);
   elements.sourceFilter.addEventListener("change", renderResources);
   elements.facilityFilter.addEventListener("change", renderResources);
