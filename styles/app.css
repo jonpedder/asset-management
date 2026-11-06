@@ -118,7 +118,12 @@ input[type="search"], input[type="file"], select { width: 100%; min-height: 36px
 .toggle input { accent-color: var(--app-accent); }
 .table-wrap { min-height: 0; overflow: auto; flex: 1; scrollbar-color: var(--app-border) transparent; }
 table { width: 100%; border-collapse: collapse; font-size: .69rem; }
-th { position: sticky; top: 0; z-index: 1; padding: .55rem .65rem; background: #091b28; color: var(--app-muted); text-align: left; text-transform: uppercase; letter-spacing: .05em; font-size: .58rem; }
+th { position: sticky; top: 0; z-index: 1; padding: .38rem .65rem .5rem; background: #091b28; color: var(--app-muted); text-align: left; text-transform: uppercase; letter-spacing: .05em; font-size: .58rem; }
+.sortable-heading { display: inline-flex; flex-direction: column; align-items: flex-start; gap: .12rem; white-space: nowrap; }
+.sort-arrows { display: inline-flex; gap: .08rem; }
+.sort-arrows button { width: 16px; height: 14px; padding: 0; border: 0; border-radius: 2px; background: transparent; color: var(--app-faint); font: inherit; font-size: .5rem; line-height: 14px; cursor: pointer; }
+.sort-arrows button:hover, .sort-arrows button:focus-visible { color: var(--app-text); background: var(--app-panel-2); outline: 1px solid var(--app-accent); }
+.sort-arrows button[aria-pressed="true"] { color: var(--app-accent); background: rgba(242,169,0,.12); }
 td { padding: .62rem .65rem; border-bottom: 1px solid var(--app-border); color: var(--app-muted); vertical-align: top; }
 tbody tr { cursor: pointer; }
 tbody tr:hover, tbody tr:focus { background: var(--app-panel-2); box-shadow: inset 3px 0 var(--app-accent); }

@@ -10,7 +10,8 @@ import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
 import { loadConfig } from "./config.js?v=20261106-3";
 import { applyPresentation } from "./presentation.js";
-import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-1";
+import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-2";
+import { sortRows } from "./table-sort.js?v=20261106-1";
 
 const state = {
   config: null,
@@ -37,7 +38,9 @@ const state = {
   facilityGeocodePreview: null,
   pendingDeleteFacilityId: null,
   selectedResourceIds: new Set(),
-  visibleResourceIds: []
+  visibleResourceIds: [],
+  resourceSort: { key: null, direction: "asc" },
+  facilitySort: { key: null, direction: "asc" }
 };
 
 const byId = (id) => document.getElementById(id);
@@ -159,11 +162,32 @@ function updateBulkControls() {
     elements.bulkStatus.textContent = error.message;
   }
 }
+const resourceSortAccessors = {
+  assetType: (record) => record.assetType,
+  department: (record) => record.department,
+  category: (record) => record.category,
+  quantity: (record) => Number.isFinite(Number(record.quantity?.estimate)) ? Number(record.quantity.estimate) : record.quantity?.raw,
+  status: (record) => record.status,
+  source: (record) => record.sourceType || record.source
+};
+const facilitySortAccessors = {
+  name: (record) => record.name,
+  type: (record) => record.type,
+  status: (record) => record.status,
+  source: (record) => record.sourceType || record.source
+};
+function syncSortButtons(table, sort) {
+  document.querySelectorAll(`[data-sort-table="${table}"]`).forEach((button) => {
+    const active = button.dataset.sortKey === sort.key && button.dataset.sortDirection === sort.direction;
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
 function renderResources() {
   const allRecords = allResourceRecords();
   state.selectedResourceIds = cleanSelectedIds(state.selectedResourceIds, allRecords);
   const filters = currentResourceFilters();
-  const records = filterResourceRecords(allRecords, filters);
+  const records = sortRows(filterResourceRecords(allRecords, filters), state.resourceSort, resourceSortAccessors);
+  syncSortButtons("resources", state.resourceSort);
   state.visibleResourceIds = records.map((record) => record.id);
   elements.inventoryCount.textContent = records.length;
   const active = [["search", filters.search], ["source", filters.source], ["facility", filters.facility], ["city", filters.city], ["ZIP", filters.zip]].filter(([, value]) => String(value).trim());
@@ -193,7 +217,8 @@ function renderResources() {
 }
 
 function renderFacilities() {
-  const records = currentFacilities();
+  const records = sortRows(currentFacilities(), state.facilitySort, facilitySortAccessors);
+  syncSortButtons("facilities", state.facilitySort);
   elements.facilityCount.textContent = records.length;
   elements.facilityRows.innerHTML = records.length ? records.map((record) => `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.name)} details">
@@ -691,6 +716,11 @@ function bindEvents() {
     setStatus("Invented demo", "warn");
     renderAll();
   });
+  document.querySelectorAll("[data-sort-table]").forEach((button) => button.addEventListener("click", () => {
+    const sort = { key: button.dataset.sortKey, direction: button.dataset.sortDirection };
+    if (button.dataset.sortTable === "resources") { state.resourceSort = sort; renderResources(); }
+    else { state.facilitySort = sort; renderFacilities(); }
+  }));
   elements.resourceSearch.addEventListener("input", renderResources);
   elements.sourceFilter.addEventListener("change", renderResources);
   elements.facilityFilter.addEventListener("change", renderResources);
