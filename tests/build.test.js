@@ -42,7 +42,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.ok(html.indexOf('class="filters"') < html.indexOf('id="bulkFacility"'), "filters appear before assignment controls");
   assert.match(html, /class="bulk-arrow"[^>]*aria-hidden="true">▶<\/span>/);
   assert.match(styles, /bulk-toggle\[aria-expanded="true"\] \.bulk-arrow\s*\{[^}]*rotate\(90deg\)/);
-  assert.match(styles, /help-card summary::before\s*\{[^}]*content: "▶"/);
+  assert.match(styles, /help-card summary::before\s*\{[^}]*content:\s*none/);
   assert.match(styles, /\.detail-actions\s*\{[^}]*align-items:\s*flex-start/);
   assert.match(styles, /\.detail-actions \.detail-edit-action\s*\{[^}]*margin-top:\s*0/);
   assert.match(styles, /\.sort-reset-button\s*\{[^}]*border:\s*1px solid var\(--app-accent\)[^}]*color:\s*var\(--app-accent\)/);
@@ -52,7 +52,8 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(styles, /\.header-report-group\s*\{[^}]*display:\s*flex/);
   assert.match(styles, /\.resource-card-line \.status\s*\{[^}]*margin-left:\s*auto/); assert.match(styles, /\.resource-source\s*\{[^}]*margin-left:\s*auto/); assert.match(styles, /\.resource-card-meta\s*\{[^}]*flex-wrap:\s*wrap/);
   assert.match(styles, /minmax\(480px,var\(--inventory-width,38%\)\)/); assert.match(styles, /\.facility-card-cell/);
-  assert.match(styles, /\.kpi-strip\s*\{[^}]*min-height:\s*60px/); assert.match(styles, /\.kpi-strip strong\s*\{[^}]*font-size:\s*1rem/); assert.match(styles, /\.workspace\s*\{[^}]*height:\s*calc\(100vh - 128px\)/);
+  assert.match(styles, /\.kpi-strip\s*\{[^}]*min-height:\s*60px/); assert.match(styles, /\.kpi-strip strong\s*\{[^}]*font-size:\s*1rem/); assert.match(styles, /\.workspace\s*\{[^}]*height:\s*calc\(100vh - 134px\)/);
+  assert.match(styles, /fonts\.googleapis\.com[^\n]*family=Inter/); assert.match(styles, /--header-height:\s*74px/); assert.match(styles, /\.brand strong\s*\{[^}]*font-size:\s*1\.05rem/); assert.match(styles, /\.tab\s*\{[^}]*min-height:\s*59px[^}]*font-size:\s*\.78rem/); assert.match(styles, /\.status::before\s*\{[^}]*width:\s*5px/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {
