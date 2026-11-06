@@ -12,7 +12,7 @@ import { loadConfig } from "./config.js?v=20261106-3";
 import { applyPresentation } from "./presentation.js";
 import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
-import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-1";
+import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-2";
 
 const state = {
   config: null,

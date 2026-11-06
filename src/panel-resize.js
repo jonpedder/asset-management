@@ -63,7 +63,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   handle.addEventListener("dblclick", () => {
     storage?.removeItem(STORAGE_KEY);
     workspace.style.removeProperty("--inventory-width");
-    handle.removeAttribute("aria-valuenow");
+    apply(workspace.clientWidth * .42);
   });
   const resize = () => {
     const current = parseFloat(getComputedStyle(workspace).getPropertyValue("--inventory-width"));
