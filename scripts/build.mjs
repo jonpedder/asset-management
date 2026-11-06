@@ -8,7 +8,7 @@ const runtimeFiles = [
   "index.html", "settings.html", "oauth-callback.html", "config/app.json", "styles/app.css",
   "src/app.js", "src/auth.js", "src/config.js", "src/csv.js", "src/demo.js", "src/format.js",
   "src/help-pdf.js", "src/import-session.js", "src/inventory-operations.js", "src/location.js", "src/map.js", "src/normalize.js", "src/asset-editing.js", "src/facility-editing.js",
-  "src/presentation.js", "src/service-data.js", "src/settings.js", "src/resource-symbols.js", "src/table-sort.js",
+  "src/presentation.js", "src/service-data.js", "src/settings.js", "src/resource-symbols.js", "src/table-sort.js", "src/panel-resize.js",
   "assets/resource-icons/biohazard.svg", "assets/resource-icons/bolt.svg", "assets/resource-icons/boxes-stacked.svg", "assets/resource-icons/building-shield.svg",
   "assets/resource-icons/droplet.svg", "assets/resource-icons/fire-extinguisher.svg", "assets/resource-icons/helmet-safety.svg", "assets/resource-icons/kit-medical.svg",
   "assets/resource-icons/magnifying-glass-location.svg", "assets/resource-icons/paw.svg", "assets/resource-icons/people-roof.svg", "assets/resource-icons/shield-halved.svg",
