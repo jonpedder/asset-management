@@ -267,6 +267,7 @@ td strong { color: var(--app-text); }
 
 /* Settings & Help */
 .brand-link, .nav-button { text-decoration: none; }
+.brand-link { color: inherit; }
 .brand-logo { width: 46px; height: 46px; object-fit: contain; padding: 3px; background: #fff; border: 1px solid var(--app-border); border-radius: 3px; }
 .settings-body { min-height: 100vh; overflow: auto; }
 .settings-page { width: min(1100px,calc(100% - 2rem)); margin: 0 auto; padding: 1.25rem 0 2rem; }
