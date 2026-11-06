@@ -15,7 +15,7 @@
   "map": { "basemap": "dark-gray-vector", "center": { "longitude": -122.3255, "latitude": 37.563 }, "zoom": 10 },
   "import": {
     "maxFileBytes": 10000000,
-    "privacyNote": "The selected file is parsed locally and normalized records remain in sessionStorage for this tab/session. Editing an imported record updates only that session. No import is bulk geocoded or uploaded. Separately, a signed-in operator may explicitly Save a current resource when the layer allows updates; address geocoding and service saves can consume services or credits. Facilities are reference-only."
+    "privacyNote": "The selected file is parsed locally and normalized records remain in sessionStorage for this tab/session. Imported locations are sent to the configured locator only after the operator chooses geocoding and separately accepts an ArcGIS-credit warning; imports are not uploaded to the feature service. Signed-in operators may explicitly save authorized resource or facility edits when the layer allows them; geocoding and service writes may consume services or credits."
   },
   "branding": {
     "appName": "Asset Management",
