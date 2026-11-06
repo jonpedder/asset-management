@@ -127,7 +127,7 @@ td strong { color: var(--app-text); }
 .resource-name > span { min-width: 0; }
 .resource-name strong, .resource-name small { display: block; }
 .resource-name small { margin-top: .12rem; color: var(--app-faint); font-size: .54rem; line-height: 1.2; }
-.resource-list-icon { width: 30px; height: 30px; flex: 0 0 30px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
+.resource-list-icon { width: 22.5px; height: 22.5px; flex: 0 0 22.5px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
 .mobile-meta { display: none; }
 .status { display: inline-flex; border: 1px solid currentColor; padding: .12rem .32rem; font-size: .56rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
 .status-available, .status-have { color: var(--status-available); }

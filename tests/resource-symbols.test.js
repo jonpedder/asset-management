@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { RESOURCE_SYMBOLS, resourceRenderer, resourceSymbolFor } from "../src/resource-symbols.js";
+import { RESOURCE_SYMBOLS, resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "../src/resource-symbols.js";
 
 test("resource categories resolve to representative picture symbols", () => {
   assert.equal(resourceSymbolFor({ category: "Communications" }).icon, "tower-broadcast");
@@ -16,5 +16,12 @@ test("resource renderer uses the category field and picture markers", () => {
   assert.equal(renderer.type, "unique-value");
   assert.match(renderer.valueExpression, /NIMS_Category/);
   assert.ok(renderer.uniqueValueInfos.length >= 10);
-  assert.ok(renderer.uniqueValueInfos.every((info) => info.symbol.type === "picture-marker" && info.symbol.url.endsWith(".svg")));
+  assert.ok(renderer.uniqueValueInfos.every((info) => info.symbol.type === "picture-marker" && info.symbol.url.endsWith(".svg") && info.symbol.width === "14pt"));
+});
+
+test("resource labels appear only at metropolitan scale and closer", () => {
+  const [label] = resourceLabelingInfo("ResourceName");
+  assert.match(label.labelExpressionInfo.expression, /ResourceName/);
+  assert.equal(label.minScale, 250000);
+  assert.equal(label.maxScale, 0);
 });

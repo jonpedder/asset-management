@@ -22,6 +22,24 @@ export function resourceSymbolFor(record = {}) {
   return RESOURCE_SYMBOLS.find((definition) => definition.keywords.some((keyword) => text.includes(keyword))) || RESOURCE_SYMBOLS.at(-1);
 }
 
+export function resourceLabelingInfo(fieldName = "ResourceName") {
+  const field = String(fieldName).replaceAll('"', "");
+  return [{
+    labelExpressionInfo: { expression: `$feature["${field}"]` },
+    labelPlacement: "above-center",
+    minScale: 250000,
+    maxScale: 0,
+    symbol: {
+      type: "text",
+      color: "#ffffff",
+      haloColor: "#071824",
+      haloSize: 1.5,
+      yoffset: 10,
+      font: { family: "Arial", size: 9, weight: "bold" }
+    }
+  }];
+}
+
 export function resourceRenderer(fieldName) {
   const field = String(fieldName || "NIMS_Category").replaceAll('"', "");
   const clauses = RESOURCE_SYMBOLS.filter((definition) => definition.value !== "other").map((definition) => {
@@ -35,9 +53,9 @@ export function resourceRenderer(fieldName) {
     uniqueValueInfos: RESOURCE_SYMBOLS.map((definition) => ({
       value: definition.value,
       label: definition.label,
-      symbol: { type: "picture-marker", url: definition.url, width: "30px", height: "30px" }
+      symbol: { type: "picture-marker", url: definition.url, width: "14pt", height: "14pt" }
     })),
     defaultLabel: "Other Resources",
-    defaultSymbol: { type: "picture-marker", url: RESOURCE_SYMBOLS.at(-1).url, width: "30px", height: "30px" }
+    defaultSymbol: { type: "picture-marker", url: RESOURCE_SYMBOLS.at(-1).url, width: "14pt", height: "14pt" }
   };
 }

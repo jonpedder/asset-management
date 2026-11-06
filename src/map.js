@@ -1,6 +1,6 @@
 import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
-import { resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-1";
+import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-2";
 
 let Graphic;
 let GraphicsLayer;
@@ -151,6 +151,8 @@ export async function addServiceLayers(config) {
   facilityLayer.popupEnabled = true;
   const resourceBindings = inferFieldBindings(resourceLayer.fields || []);
   resourceLayer.renderer = resourceRenderer(resourceBindings.category || "NIMS_Category");
+  resourceLayer.labelsVisible = true;
+  resourceLayer.labelingInfo = resourceLabelingInfo(resourceBindings.assetType || "ResourceName");
   resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
   facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
   serviceLayers = [resourceLayer, facilityLayer];
@@ -161,7 +163,7 @@ export async function addServiceLayers(config) {
 
 function resourceGraphicSymbol(record) {
   const definition = resourceSymbolFor(record);
-  return { type: "picture-marker", url: definition.url, width: "30px", height: "30px" };
+  return { type: "picture-marker", url: definition.url, width: "14pt", height: "14pt" };
 }
 
 function graphicFor(record, symbol) {
