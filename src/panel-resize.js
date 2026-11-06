@@ -1,8 +1,10 @@
-const STORAGE_KEY = "assetManagement.inventoryPanelWidth.v2";
+const STORAGE_KEY = "assetManagement.inventoryPanelWidth.v3";
 
 export function inventoryWidthBounds(workspaceWidth) {
   const width = Number(workspaceWidth) || 0;
-  return { min: 340, max: Math.max(340, width - 350) };
+  const max = Math.max(340, width - 350);
+  const preferredMinimum = width > 1250 ? 480 : 430;
+  return { min: Math.min(preferredMinimum, max), max };
 }
 
 export function clampInventoryWidth(width, workspaceWidth) {
@@ -19,17 +21,18 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
       handle.removeAttribute("aria-valuenow");
       return null;
     }
+    const bounds = inventoryWidthBounds(workspace.clientWidth);
     const width = clampInventoryWidth(requested, workspace.clientWidth);
     workspace.style.setProperty("--inventory-width", `${width}px`);
-    handle.setAttribute("aria-valuemin", "340");
-    handle.setAttribute("aria-valuemax", String(inventoryWidthBounds(workspace.clientWidth).max));
+    handle.setAttribute("aria-valuemin", String(bounds.min));
+    handle.setAttribute("aria-valuemax", String(bounds.max));
     handle.setAttribute("aria-valuenow", String(Math.round(width)));
     if (persist) storage?.setItem(STORAGE_KEY, String(Math.round(width)));
     return width;
   };
   const saved = Number(storage?.getItem(STORAGE_KEY));
   if (Number.isFinite(saved) && saved > 0) apply(saved);
-  else apply(workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .36);
+  else apply(workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .38);
 
   let startX = 0;
   let startWidth = 0;
@@ -45,7 +48,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   handle.addEventListener("pointerdown", (event) => {
     if (mobile()) return;
     startX = event.clientX;
-    startWidth = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .36;
+    startWidth = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .38;
     handle.setPointerCapture(event.pointerId);
     handle.classList.add("dragging");
     window.addEventListener("pointermove", move);
@@ -54,7 +57,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   });
   handle.addEventListener("keydown", (event) => {
     if (mobile() || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    const current = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .36;
+    const current = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .38;
     const bounds = inventoryWidthBounds(workspace.clientWidth);
     const requested = event.key === "Home" ? bounds.min : event.key === "End" ? bounds.max : current + (event.key === "ArrowLeft" ? -24 : 24);
     apply(requested, true);
@@ -63,7 +66,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   handle.addEventListener("dblclick", () => {
     storage?.removeItem(STORAGE_KEY);
     workspace.style.removeProperty("--inventory-width");
-    apply(workspace.clientWidth * .36);
+    apply(workspace.clientWidth * .38);
   });
   const resize = () => {
     const current = parseFloat(getComputedStyle(workspace).getPropertyValue("--inventory-width"));

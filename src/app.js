@@ -13,7 +13,7 @@ import { applyPresentation } from "./presentation.js";
 import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
-import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-4";
+import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-5";
 import { availableResourcesReport, inventoryGapStatusReport, isResourceAvailable, reportSummary, resourceFacilityName, resourcesAtFacilitiesReport } from "./report-data.js?v=20261106-2";
 import { buildInventoryReportPdf, loadPdfImage } from "./report-pdf.js?v=20261106-1";
 import { buildGapStatusReportPdf } from "./gap-report-pdf.js?v=20261106-1";
