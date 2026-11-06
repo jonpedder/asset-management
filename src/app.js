@@ -8,7 +8,7 @@ import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./se
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
-import { loadConfig } from "./config.js?v=20261106-3";
+import { loadConfig } from "./config.js?v=20261106-4";
 import { applyPresentation } from "./presentation.js";
 import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";

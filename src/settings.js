@@ -1,4 +1,4 @@
-import { clearConfigOverrides, loadConfig, mergeConfig, saveConfigOverrides, validateConfig } from "./config.js";
+import { clearConfigOverrides, loadConfig, mergeConfig, saveConfigOverrides, validateConfig } from "./config.js?v=20261106-4";
 import { applyPresentation } from "./presentation.js";
 import { buildHelpPdf } from "./help-pdf.js";
 import { inspectCsv, mapCsvRecords, TARGET_FIELDS } from "./csv.js";
