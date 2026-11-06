@@ -17,7 +17,7 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   assert.match(html, /Asset Type is required/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
   assert.match(html, /id="resourceIconGrid"/); assert.match(html, /Resource category icons/); assert.match(html, /no larger than 100 KB/); assert.match(html, /id="facilityIconUrl"/); assert.match(html, /id="facilityIconPreview"/);
   assert.match(html, /id="webMapItemId"/); assert.match(html, /id="webMapUrl"/); assert.match(html, /Feature service REST URL/);
-  assert.match(html, /Sorting, filtering, resizing, map symbols, and editing/); assert.match(html, /Reset sort order restores both lists/); assert.match(html, /Editing Information banner is collapsed by default/); assert.match(html, /row highlighted with a subtle amber glow/); assert.match(html, /return to the previous map viewpoint/); assert.match(html, /Available resources by type breakdown/); assert.match(html, /id="help-reports"/); assert.match(html, /temporarily isolates the mapped report resources/);
+  assert.match(html, /Sorting, filtering, resizing, map symbols, and editing/); assert.match(html, /Reset sort order restores both lists/); assert.match(html, /Editing Information banner is collapsed by default/); assert.match(html, /row highlighted with a subtle amber glow/); assert.match(html, /return to the previous map viewpoint/); assert.match(html, /Available resources by type breakdown/); assert.match(html, /multi-line card layout/); assert.match(html, /id="help-reports"/); assert.match(html, /temporarily isolates the mapped report resources/);
   assert.match(html, /id="geocodeDialog"/); assert.match(html, /id="geocodeConfirm"/); assert.match(html, /Geocoding requires a second confirmation warning/); assert.match(html, /js\.arcgis\.com\/5\.1/);
   assert.equal((html.match(/<\/body><\/html>/g) || []).length, 1);
 });
@@ -42,6 +42,7 @@ test("main page has no import dialog and places a square settings cog at the far
   assert.doesNotMatch(html, /class="status-strip"/); assert.match(html, /class="header-data-status"/);
   assert.match(html, /id="resourceTab"[\s\S]*id="resourceCount"[\s\S]*id="facilityTab"[\s\S]*id="facilityCount"/);
   assert.match(html, /id="bulkHeading">Bulk facility assignment[\s\S]*id="resetSortOrder"[\s\S]*Reset sort order/);
+  assert.match(html, /class="resource-sort-toolbar"/); assert.match(html, /id="resourceRows"[\s\S]*colspan="2"/);
   assert.match(html, /id="reportType"[\s\S]*Summary report[\s\S]*Resources at a facility[\s\S]*Resources available/); assert.match(html, /id="exportReportButton"/);
   assert.match(html, /id="detailPanel"[^>]*aria-hidden="true"/); assert.match(html, /id="detailClose"/);
 });
@@ -51,6 +52,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   assert.match(app, /import \{ readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
   assert.match(app, /elements\.resourceCount\.textContent = allRecords\.length/);
+  assert.match(app, /resource-card-line/); assert.match(app, /resource-card-meta/); assert.match(app, /record\.facility \|\| record\.locationName/);
   assert.match(app, /function openDetailPanel/); assert.match(app, /function closeDetailPanel/); assert.match(app, /detailClose\.addEventListener\("click", closeDetailPanel\)/);
   assert.match(app, /function syncSelectedRows/); assert.match(app, /selected-row/); assert.match(app, /restoreListView\(\)/);
   assert.match(app, /function reportScopedResources/); assert.match(app, /filterResourceRecords\(allResourceRecords\(\), currentResourceFilters\(\)\)/); assert.doesNotMatch(app, /filteredResourceRecords/); assert.match(app, /function exportSelectedReport/); assert.match(app, /captureResourceReportMap\(report\.records\)/); assert.match(app, /buildInventoryReportPdf/);

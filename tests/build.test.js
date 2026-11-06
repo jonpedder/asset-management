@@ -50,6 +50,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(styles, /\.detail-panel\.open\s*\{[^}]*translateX\(0\)/);
   assert.match(styles, /tbody tr\.selected-row\s*\{[^}]*var\(--app-accent\)[^}]*0 0 10px/);
   assert.match(styles, /\.header-report-group\s*\{[^}]*display:\s*flex/);
+  assert.match(styles, /\.resource-card-line\s*\{[^}]*justify-content:\s*space-between/); assert.match(styles, /\.resource-card-meta\s*\{[^}]*flex-wrap:\s*wrap/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {

@@ -218,7 +218,7 @@ function renderResources() {
   elements.selectAllVisible.checked = records.length > 0 && visibleSelected === records.length;
   elements.selectAllVisible.indeterminate = visibleSelected > 0 && visibleSelected < records.length;
   if (!records.length) {
-    elements.resourceRows.innerHTML = '<tr><td colspan="7" class="empty-cell">No inventory records match the current filters.</td></tr>';
+    elements.resourceRows.innerHTML = '<tr><td colspan="2" class="empty-cell">No inventory records match the current filters.</td></tr>';
     updateBulkControls();
     updateReportAvailability();
     return;
@@ -228,12 +228,11 @@ function renderResources() {
     return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.assetType)} details">
       <td class="select-column"><input class="resource-select" type="checkbox" data-select-id="${escapeHtml(record.id)}" ${state.selectedResourceIds.has(record.id) ? "checked" : ""} aria-label="Select ${escapeHtml(record.assetType)} for bulk actions"></td>
-      <td><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(symbol.url)}" alt=""><span><strong>${escapeHtml(record.assetType)}</strong><small>${escapeHtml(symbol.label)}</small></span></div><span class="mobile-meta">${escapeHtml(record.department || "No department")}</span></td>
-      <td>${escapeHtml(record.department || "—")}</td>
-      <td>${escapeHtml(record.category || "—")}</td>
-      <td>${escapeHtml(record.quantity?.raw || "—")}</td>
-      <td><span class="status status-${escapeHtml((record.status || "unknown").toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(record.status || "Unknown")}</span></td>
-      <td>${sourceLabel(record)}</td>
+      <td class="resource-card-cell">
+        <div class="resource-card-line"><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(symbol.url)}" alt=""><span><strong>${escapeHtml(record.assetType)}</strong><small>${escapeHtml(symbol.label)}</small></span></div><span class="status status-${escapeHtml((record.status || "unknown").toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(record.status || "Unknown")}</span></div>
+        <div class="resource-card-meta"><span><b>Category</b> ${escapeHtml(record.category || "Unclassified")}</span><span><b>Department</b> ${escapeHtml(record.department || "No department")}</span></div>
+        <div class="resource-card-meta resource-card-location"><span><b>Facility</b> ${escapeHtml(record.facility || record.locationName || "Unassigned")}</span><span><b>Qty</b> ${escapeHtml(record.quantity?.raw || "—")}</span><span class="resource-source">${sourceLabel(record)}</span></div>
+      </td>
     </tr>`;
   }).join("");
   syncSelectedRows();

@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261106-15">
+  <link rel="stylesheet" href="./styles/app.css?v=20261106-16">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261106-25"></script>
+  <script type="module" src="./src/app.js?v=20261106-26"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -90,14 +90,16 @@
             <caption class="sr-only">Resource inventory with bulk selection</caption>
             <thead><tr>
               <th scope="col" class="select-column"><input id="selectAllVisible" type="checkbox" aria-label="Select all visible assets"></th>
-              <th scope="col"><div class="sortable-heading"><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="assetType" data-sort-direction="asc" aria-label="Sort resources by asset ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="assetType" data-sort-direction="desc" aria-label="Sort resources by asset descending">▼</button></span><span>Asset</span></div></th>
-              <th scope="col"><div class="sortable-heading"><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="department" data-sort-direction="asc" aria-label="Sort resources by department ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="department" data-sort-direction="desc" aria-label="Sort resources by department descending">▼</button></span><span>Department</span></div></th>
-              <th scope="col"><div class="sortable-heading"><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="category" data-sort-direction="asc" aria-label="Sort resources by category ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="category" data-sort-direction="desc" aria-label="Sort resources by category descending">▼</button></span><span>Category</span></div></th>
-              <th scope="col"><div class="sortable-heading"><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="quantity" data-sort-direction="asc" aria-label="Sort resources by quantity ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="quantity" data-sort-direction="desc" aria-label="Sort resources by quantity descending">▼</button></span><span>Qty</span></div></th>
-              <th scope="col"><div class="sortable-heading"><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="status" data-sort-direction="asc" aria-label="Sort resources by status ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="status" data-sort-direction="desc" aria-label="Sort resources by status descending">▼</button></span><span>Status</span></div></th>
-              <th scope="col"><div class="sortable-heading"><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="source" data-sort-direction="asc" aria-label="Sort resources by source ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="source" data-sort-direction="desc" aria-label="Sort resources by source descending">▼</button></span><span>Source</span></div></th>
+              <th scope="col"><div class="resource-sort-toolbar"><span class="resource-sort-label">Sort</span>
+                <span class="compact-sort"><span>Asset</span><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="assetType" data-sort-direction="asc" aria-label="Sort resources by asset ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="assetType" data-sort-direction="desc" aria-label="Sort resources by asset descending">▼</button></span></span>
+                <span class="compact-sort"><span>Department</span><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="department" data-sort-direction="asc" aria-label="Sort resources by department ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="department" data-sort-direction="desc" aria-label="Sort resources by department descending">▼</button></span></span>
+                <span class="compact-sort"><span>Category</span><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="category" data-sort-direction="asc" aria-label="Sort resources by category ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="category" data-sort-direction="desc" aria-label="Sort resources by category descending">▼</button></span></span>
+                <span class="compact-sort"><span>Qty</span><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="quantity" data-sort-direction="asc" aria-label="Sort resources by quantity ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="quantity" data-sort-direction="desc" aria-label="Sort resources by quantity descending">▼</button></span></span>
+                <span class="compact-sort"><span>Status</span><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="status" data-sort-direction="asc" aria-label="Sort resources by status ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="status" data-sort-direction="desc" aria-label="Sort resources by status descending">▼</button></span></span>
+                <span class="compact-sort"><span>Source</span><span class="sort-arrows"><button type="button" data-sort-table="resources" data-sort-key="source" data-sort-direction="asc" aria-label="Sort resources by source ascending">▲</button><button type="button" data-sort-table="resources" data-sort-key="source" data-sort-direction="desc" aria-label="Sort resources by source descending">▼</button></span></span>
+              </div></th>
             </tr></thead>
-            <tbody id="resourceRows"><tr><td colspan="7" class="empty-cell">Loading inventory…</td></tr></tbody>
+            <tbody id="resourceRows"><tr><td colspan="2" class="empty-cell">Loading inventory…</td></tr></tbody>
           </table>
         </div>
       </section>
