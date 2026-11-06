@@ -30,7 +30,8 @@ test("settings runtime inspects, maps, previews, normalizes, and stages the sele
 test("main page has no import dialog and places a square settings cog at the far right", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   assert.doesNotMatch(html, /id="importButton"/); assert.doesNotMatch(html, /id="importDialog"/); assert.doesNotMatch(html, /id="csvFile"/);
-  assert.match(html, /id="signInButton"[\s\S]*id="signOutButton"[\s\S]*id="settingsLink"/); assert.match(html, /class="settings-cog"/); assert.match(html, /class="sr-only">Settings<\/span>/);
+  assert.match(html, /id="signInButton"[\s\S]*id="signOutButton"[\s\S]*id="serviceStatus"[\s\S]*id="lastUpdated"[\s\S]*id="settingsLink"/); assert.match(html, /class="settings-cog"/); assert.match(html, /class="sr-only">Settings<\/span>/);
+  assert.doesNotMatch(html, /class="status-strip"/); assert.match(html, /class="header-data-status"/);
   assert.match(html, /id="bulkHeading">Bulk facility assignment[\s\S]*id="resetSortOrder"[\s\S]*Reset sort order/);
 });
 

@@ -61,13 +61,10 @@ button, input, select, summary, [tabindex] { outline-offset: 3px; }
 .settings-cog-link { width: 40px; min-width: 40px; height: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--app-text); border: 1px solid var(--app-border); border-radius: 3px; }
 .settings-cog { width: 20px; height: 20px; flex: 0 0 auto; fill: currentColor; }
 .settings-cog-link:hover .settings-cog { color: var(--app-accent); }
-.status-strip { min-height: 40px; padding: .45rem 1rem; display: flex; align-items: center; gap: 1.2rem; background: var(--app-panel); border-bottom: 1px solid var(--app-border); color: var(--app-muted); font-size: .7rem; }
-.status-grow { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.operational-tag { color: var(--app-blue); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; white-space: nowrap; }
-.operational-tag::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: .4rem; border-radius: 50%; background: currentColor; }
-.operational-tag[data-tone="ok"] { color: var(--app-green); }
-.operational-tag[data-tone="warn"] { color: var(--app-accent); }
-.operational-tag[data-tone="error"] { color: var(--app-red); }
+.header-data-status { min-height: 40px; display: grid; align-content: center; gap: .12rem; max-width: 360px; padding: .25rem .65rem; border-left: 1px solid var(--app-border); color: var(--app-muted); white-space: nowrap; }
+.header-data-line { overflow: hidden; text-overflow: ellipsis; font-size: .65rem; }
+.header-data-line strong { color: var(--app-text); }
+.header-data-status #lastUpdated { color: var(--app-faint); font-size: .59rem; }
 .kpi-strip { min-height: 84px; display: grid; grid-template-columns: repeat(5,minmax(120px,1fr)); background: var(--app-bg); border-bottom: 1px solid var(--app-border); }
 .kpi-strip article { padding: .8rem 1rem; border-right: 1px solid var(--app-border); }
 .kpi-strip span, .kpi-strip small { display: block; color: var(--app-muted); font-size: .62rem; }
@@ -75,7 +72,7 @@ button, input, select, summary, [tabindex] { outline-offset: 3px; }
 .kpi-strip strong { display: block; margin: .15rem 0; color: var(--app-text); font-size: 1.35rem; }
 .kpi-strip .benchmark { background: rgba(242,169,0,.08); box-shadow: inset 0 3px var(--app-accent); }
 .kpi-strip .benchmark strong { color: var(--app-accent); }
-.workspace { height: calc(100vh - 192px); min-height: 480px; display: grid; grid-template-columns: minmax(340px,var(--inventory-width,42%)) minmax(350px,1fr) minmax(280px,320px); }
+.workspace { height: calc(100vh - 152px); min-height: 480px; display: grid; grid-template-columns: minmax(340px,var(--inventory-width,42%)) minmax(350px,1fr) minmax(280px,320px); }
 .panel { min-width: 0; background: var(--app-panel); display: flex; flex-direction: column; overflow: hidden; }
 .inventory-panel { position: relative; border-right: 1px solid var(--app-border); }
 .inventory-resize-handle { position: absolute; z-index: 5; top: 0; right: 0; bottom: 0; width: 8px; padding: 0; border: 0; border-left: 1px solid transparent; border-right: 1px solid transparent; background: transparent; color: var(--app-faint); cursor: col-resize; touch-action: none; }
@@ -204,7 +201,7 @@ td strong { color: var(--app-text); }
   .workspace { grid-template-columns: minmax(430px,42%) 1fr 280px; }
   .kpi-strip { grid-template-columns: repeat(3,1fr); }
   .kpi-strip article { padding: .5rem .8rem; }
-  .workspace { height: calc(100vh - 276px); }
+  .workspace { height: calc(100vh - 236px); }
   .filters > label:not(.toggle) { flex-basis: calc(50% - .5rem); }
   .filter-clear, .toggle { flex: 1 1 auto; }
   .bulk-content { grid-template-columns: 1fr 1fr; }
@@ -214,7 +211,7 @@ td strong { color: var(--app-text); }
   body { overflow: auto; }
   .app-header { flex-wrap: wrap; }
   .header-actions { width: 100%; margin: 0; }
-  .status-strip { flex-wrap: wrap; }
+  .header-data-status { flex: 1 1 260px; max-width: none; }
   .kpi-strip { grid-template-columns: repeat(2,1fr); }
   .workspace { height: auto; min-height: 0; display: block; }
   .inventory-panel { min-height: 520px; }
