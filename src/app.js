@@ -905,7 +905,7 @@ async function main() {
     elements.authStatus.textContent = auth.signedIn ? "Authenticated session found" : auth.oauthConfigured ? "Not signed in · OAuth configured" : "OAuth not configured";
     elements.signInButton.disabled = !auth.oauthConfigured;
     presentSession();
-    await initializeMap(state.config, showDetail, { authenticated: state.signedIn });
+    await initializeMap(state.config, showDetail, { authenticated: state.signedIn, getResources: allResourceRecords });
     setMockedVisible(elements.mockedToggle.checked);
     window.__app = {
       version: "1.2.0-facility-crud-map-placement",

@@ -2,6 +2,7 @@ import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
 import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
 import { FACILITY_SYMBOL_URL, facilityLabelingInfo, facilityRenderer } from "./facility-symbols.js?v=20261106-2";
+import { summarizeFacilityResources } from "./facility-resource-summary.js?v=20261106-1";
 
 let Graphic;
 let GraphicsLayer;
@@ -17,6 +18,7 @@ let pointSelection = null;
 let resourceIconOverride = "";
 let facilityIconOverride = "";
 let selectionReturnViewpoint = null;
+let resourceProvider = () => [];
 
 const symbols = {
   imported: { type: "simple-marker", style: "circle", size: 10, color: "#f2a900", outline: { color: "#071824", width: 1.5 } },
@@ -29,6 +31,7 @@ const symbols = {
 export async function initializeMap(config, onSelect, options = {}) {
   resourceIconOverride = config.symbols?.resourceIconUrl || "";
   facilityIconOverride = config.symbols?.facilityIconUrl || "";
+  resourceProvider = typeof options.getResources === "function" ? options.getResources : () => [];
   if (config.resourceColors) {
     symbols.imported.color = config.resourceColors.imported || symbols.imported.color;
     symbols.mocked.color = config.resourceColors.mocked || symbols.mocked.color;
@@ -91,6 +94,53 @@ export async function initializeMap(config, onSelect, options = {}) {
   return { map, view };
 }
 
+function facilityResourceElement(facilityName) {
+  const summary = summarizeFacilityResources(resourceProvider(), facilityName);
+  const section = document.createElement("section");
+  section.className = "facility-resource-summary";
+  section.style.cssText = "margin-top:.75rem;padding-top:.7rem;border-top:1px solid var(--app-border,#4b6473);";
+  const heading = document.createElement("h3");
+  heading.textContent = "Available resources by type";
+  heading.style.cssText = "margin:0 0 .35rem;color:var(--app-accent,#f2a900);font-size:.82rem;";
+  section.append(heading);
+  if (!summary.types.length) {
+    const empty = document.createElement("p");
+    empty.className = "facility-resource-empty";
+    empty.textContent = "No resources marked Available are assigned to this facility.";
+    empty.style.cssText = "margin:0;color:var(--app-muted,#9eb9c8);font-size:.74rem;";
+    section.append(empty);
+    return section;
+  }
+  const total = document.createElement("p");
+  total.className = "facility-resource-total";
+  total.textContent = `${summary.totalQuantity.toLocaleString()} available across ${summary.types.length} type${summary.types.length === 1 ? "" : "s"}`;
+  total.style.cssText = "margin:0 0 .45rem;color:var(--app-text,#eef8ff);font-size:.74rem;font-weight:700;";
+  section.append(total);
+  const table = document.createElement("table");
+  table.className = "facility-resource-table";
+  table.style.cssText = "width:100%;border-collapse:collapse;font-size:.72rem;";
+  const head = document.createElement("thead");
+  head.innerHTML = "<tr><th>Resource type</th><th>Available</th></tr>";
+  head.querySelectorAll("th").forEach((cell, index) => { cell.style.cssText = `padding:.25rem;border-bottom:1px solid var(--app-border,#4b6473);text-align:${index ? "right" : "left"};color:var(--app-muted,#9eb9c8);`; });
+  table.append(head);
+  const body = document.createElement("tbody");
+  summary.types.forEach((item) => {
+    const row = document.createElement("tr");
+    const type = document.createElement("td");
+    type.textContent = item.type;
+    type.style.cssText = "padding:.3rem .25rem;border-bottom:1px solid var(--app-border,#4b6473);";
+    const available = document.createElement("td");
+    available.textContent = item.quantity.toLocaleString();
+    available.style.cssText = "padding:.3rem .25rem;border-bottom:1px solid var(--app-border,#4b6473);text-align:right;font-weight:700;color:var(--app-accent,#f2a900);";
+    available.title = `${item.records} inventory record${item.records === 1 ? "" : "s"}`;
+    row.append(type, available);
+    body.append(row);
+  });
+  table.append(body);
+  section.append(table);
+  return section;
+}
+
 function servicePopupTemplate(layer, kind) {
   const bindings = kind === "resource"
     ? inferFieldBindings(layer.fields || [])
@@ -117,7 +167,8 @@ function servicePopupTemplate(layer, kind) {
     title: titleField ? `{${titleField}}` : layer.title,
     content: [
       { type: "text", text: kind === "resource" ? "<b>Resource inventory record</b>" : "<b>Facility inventory record</b>" },
-      { type: "fields", fieldInfos }
+      { type: "fields", fieldInfos },
+      ...(kind === "facility" ? [{ type: "custom", creator: (event) => facilityResourceElement(titleField ? event.graphic.attributes?.[titleField] : layer.title) }] : [])
     ],
     fieldInfos
   };
@@ -205,7 +256,8 @@ function graphicFor(record, symbol) {
         { fieldName: "address", label: "Address" },
         { fieldName: "location", label: "Location status" },
         { fieldName: "source", label: "Source" }
-      ] }]
+      ] },
+      ...(record.assetType ? [] : [{ type: "custom", creator: () => facilityResourceElement(record.name) }])]
     }
   });
 }

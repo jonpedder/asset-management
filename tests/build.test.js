@@ -23,6 +23,7 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(app, /Authenticated · \$\{username\}/);
   assert.match(app, /elements\.signInButton\.hidden = authenticated/);
   assert.match(map, /selectionReturnViewpoint = view\.viewpoint\.clone\(\)/); assert.match(map, /export async function restoreListView/); assert.match(map, /view\.goTo\(viewpoint/);
+  assert.match(map, /function facilityResourceElement/); assert.match(map, /Available resources by type/); assert.match(map, /type: "custom"/);
   assert.equal(config.webMapItemId, "4cf195324bbb4c65b4defe7ae4b935bc");
   assert.equal(config.layers.resources, 0);
   assert.equal(config.layers.facilities, 1);
