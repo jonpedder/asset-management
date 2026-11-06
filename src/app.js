@@ -13,9 +13,10 @@ import { applyPresentation } from "./presentation.js";
 import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
-import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-3";
-import { availableResourcesReport, isResourceAvailable, reportSummary, resourceFacilityName, resourcesAtFacilitiesReport } from "./report-data.js?v=20261106-1";
+import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-4";
+import { availableResourcesReport, inventoryGapStatusReport, isResourceAvailable, reportSummary, resourceFacilityName, resourcesAtFacilitiesReport } from "./report-data.js?v=20261106-2";
 import { buildInventoryReportPdf, loadPdfImage } from "./report-pdf.js?v=20261106-1";
+import { buildGapStatusReportPdf } from "./gap-report-pdf.js?v=20261106-1";
 
 const state = {
   config: null,
@@ -249,9 +250,9 @@ function renderFacilities() {
     const iconUrl = state.config?.symbols?.facilityIconUrl || FACILITY_SYMBOL_URL;
     return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.name)} details">
-      <td><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(iconUrl)}" alt=""><span><strong>${escapeHtml(record.name)}</strong></span></div></td><td>${escapeHtml(record.type)}</td><td>${escapeHtml(record.status)}</td><td>${sourceLabel(record)}</td>
+      <td class="facility-card-cell"><div class="resource-card-line"><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(iconUrl)}" alt=""><span><strong>${escapeHtml(record.name)}</strong></span></div><span class="status status-${escapeHtml((record.status || "unknown").toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(record.status || "Unknown")}</span></div><div class="resource-card-meta"><span><b>Type</b> ${escapeHtml(record.type || "Facility")}</span><span class="resource-source">${sourceLabel(record)}</span></div></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="4" class="empty-cell">No facilities are loaded.</td></tr>';
+  }).join("") : '<tr><td colspan="1" class="empty-cell">No facilities are loaded.</td></tr>';
   syncSelectedRows();
   updateReportAvailability();
 }
@@ -705,14 +706,15 @@ async function exportSelectedReport() {
     let report; let fileName; let mapImage = null;
     if (kind === "summary") { report = reportSummary(resources, facilities, scope); fileName = "inventory-summary"; }
     else if (kind === "facility") { report = resourcesAtFacilitiesReport(resources, scope); fileName = "resources-at-facility"; }
+    else if (kind === "gap-status") { report = inventoryGapStatusReport(resources, scope); fileName = "inventory-gap-status"; }
     else {
       report = availableResourcesReport(resources, scope);
       fileName = "resources-available";
       mapImage = await captureResourceReportMap(report.records);
     }
-    const logo = await loadPdfImage(state.config.branding?.logoUrl || "").catch(() => null);
+    const logo = kind === "gap-status" ? null : await loadPdfImage(state.config.branding?.logoUrl || "").catch(() => null);
     const branding = { appName: state.config.branding?.appName, subtitle: state.config.branding?.subtitle, logo, mapImage, colors: state.config.branding?.colors };
-    const blob = buildInventoryReportPdf(report, new Date(), branding);
+    const blob = kind === "gap-status" ? buildGapStatusReportPdf(report, new Date(), branding) : buildInventoryReportPdf(report, new Date(), branding);
     downloadReport(blob, fileName);
     toast(`${report.title} downloaded.`, "success");
   } catch (error) { toast(error.message || "The report could not be generated.", "error"); }

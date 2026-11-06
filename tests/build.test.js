@@ -50,7 +50,8 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(styles, /\.detail-panel\.open\s*\{[^}]*translateX\(0\)/);
   assert.match(styles, /tbody tr\.selected-row\s*\{[^}]*var\(--app-accent\)[^}]*0 0 10px/);
   assert.match(styles, /\.header-report-group\s*\{[^}]*display:\s*flex/);
-  assert.match(styles, /\.resource-card-line\s*\{[^}]*justify-content:\s*space-between/); assert.match(styles, /\.resource-card-meta\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(styles, /\.resource-card-line\s*\{[^}]*flex-wrap:\s*wrap[^}]*justify-content:\s*flex-start/); assert.match(styles, /\.resource-card-meta\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(styles, /var\(--inventory-width,36%\)/); assert.match(styles, /\.facility-card-cell/);
   assert.match(styles, /\.kpi-strip\s*\{[^}]*min-height:\s*60px/); assert.match(styles, /\.kpi-strip strong\s*\{[^}]*font-size:\s*1rem/); assert.match(styles, /\.workspace\s*\{[^}]*height:\s*calc\(100vh - 128px\)/);
 });
 

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "assetManagement.inventoryPanelWidth";
+const STORAGE_KEY = "assetManagement.inventoryPanelWidth.v2";
 
 export function inventoryWidthBounds(workspaceWidth) {
   const width = Number(workspaceWidth) || 0;
@@ -29,7 +29,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   };
   const saved = Number(storage?.getItem(STORAGE_KEY));
   if (Number.isFinite(saved) && saved > 0) apply(saved);
-  else apply(workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .42);
+  else apply(workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .36);
 
   let startX = 0;
   let startWidth = 0;
@@ -45,7 +45,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   handle.addEventListener("pointerdown", (event) => {
     if (mobile()) return;
     startX = event.clientX;
-    startWidth = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .42;
+    startWidth = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .36;
     handle.setPointerCapture(event.pointerId);
     handle.classList.add("dragging");
     window.addEventListener("pointermove", move);
@@ -54,7 +54,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   });
   handle.addEventListener("keydown", (event) => {
     if (mobile() || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    const current = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .42;
+    const current = workspace.querySelector(".inventory-panel")?.getBoundingClientRect().width || workspace.clientWidth * .36;
     const bounds = inventoryWidthBounds(workspace.clientWidth);
     const requested = event.key === "Home" ? bounds.min : event.key === "End" ? bounds.max : current + (event.key === "ArrowLeft" ? -24 : 24);
     apply(requested, true);
@@ -63,7 +63,7 @@ export function initializeInventoryResizer({ workspace, handle, storage = window
   handle.addEventListener("dblclick", () => {
     storage?.removeItem(STORAGE_KEY);
     workspace.style.removeProperty("--inventory-width");
-    apply(workspace.clientWidth * .42);
+    apply(workspace.clientWidth * .36);
   });
   const resize = () => {
     const current = parseFloat(getComputedStyle(workspace).getPropertyValue("--inventory-width"));
