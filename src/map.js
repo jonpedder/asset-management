@@ -1,6 +1,6 @@
 import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
-import { resourceRenderer } from "./resource-symbols.js?v=20261106-1";
+import { resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-1";
 
 let Graphic;
 let GraphicsLayer;
@@ -159,6 +159,11 @@ export async function addServiceLayers(config) {
   return { resourceLayer, facilityLayer };
 }
 
+function resourceGraphicSymbol(record) {
+  const definition = resourceSymbolFor(record);
+  return { type: "picture-marker", url: definition.url, width: "30px", height: "30px" };
+}
+
 function graphicFor(record, symbol) {
   return new Graphic({
     geometry: record.geometry,
@@ -194,14 +199,14 @@ export function displayImported(records) {
   mockedLayer.removeAll();
   for (const record of records) {
     const target = record.isMockLocation ? mockedLayer : importedLayer;
-    target.add(graphicFor(record, record.isMockLocation ? symbols.mocked : symbols.imported));
+    target.add(graphicFor(record, resourceGraphicSymbol(record)));
   }
   if (records.length) view.goTo([...importedLayer.graphics, ...mockedLayer.graphics], { padding: 80 }).catch(() => {});
 }
 
 export function displayDemo(resources, facilities) {
   demoLayer.removeAll();
-  resources.forEach((record) => demoLayer.add(graphicFor(record, symbols.demo)));
+  resources.forEach((record) => demoLayer.add(graphicFor(record, resourceGraphicSymbol(record))));
   facilities.forEach((record) => demoLayer.add(graphicFor(record, symbols.demoFacility)));
   view.goTo(demoLayer.graphics, { padding: 80 }).catch(() => {});
 }
