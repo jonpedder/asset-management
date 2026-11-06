@@ -275,6 +275,15 @@ td strong { color: var(--app-text); }
 .symbol-setting { display: grid; grid-template-columns: minmax(0,1fr) 96px; gap: .75rem; align-items: end; padding: .75rem; border: 1px solid var(--app-border); background: var(--app-panel-alt); }
 .symbol-preview-wrap { min-height: 96px; display: grid; place-items: center; border: 1px solid var(--app-border); background: var(--app-bg); }
 .symbol-preview { width: 72px; height: 72px; object-fit: contain; }
+.settings-subheading { margin: .9rem 0 .55rem; color: var(--app-accent); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+.resource-icon-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(270px,1fr)); gap: .65rem; }
+.resource-icon-card { display: grid; grid-template-columns: 64px minmax(0,1fr); gap: .65rem; align-items: start; padding: .65rem; border: 1px solid var(--app-border); background: var(--app-panel-alt); }
+.resource-category-preview-wrap { width: 64px; height: 64px; display: grid; place-items: center; border: 1px solid var(--app-border); background: var(--app-bg); }
+.resource-category-preview { width: 46px; height: 46px; object-fit: contain; }
+.resource-icon-controls h5 { margin: 0 0 .45rem; color: var(--app-text); font-size: .76rem; }
+.resource-icon-controls .cfg-field { margin-top: .38rem; }
+.resource-icon-controls .btn { margin-top: .5rem; }
+.facility-symbol-setting { max-width: 620px; }
 .preference-row { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; padding: .7rem 0; border-bottom: 1px solid var(--app-border); color: var(--app-text); font-size: .78rem; }
 .preference-row small { display: block; margin-top: .2rem; color: var(--app-faint); font-size: .66rem; font-weight: 400; }
 .preference-row input { width: 20px; height: 20px; accent-color: var(--app-accent); }

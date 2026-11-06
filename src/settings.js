@@ -4,7 +4,7 @@ import { buildHelpPdf } from "./help-pdf.js";
 import { inspectCsv, mapCsvRecords, TARGET_FIELDS } from "./csv.js";
 import { normalizeImportedRecord } from "./normalize.js";
 import { clearImportSession, readImportSession, saveImportSession } from "./import-session.js";
-import { RESOURCE_SYMBOLS } from "./resource-symbols.js?v=20261106-3";
+import { RESOURCE_SYMBOLS } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { initializeAuth } from "./auth.js";
 import { applyGeocodeCandidates, buildGeocodePlan } from "./import-geocoding.js?v=20261106-1";
@@ -16,7 +16,8 @@ const defaults = {
   resource: { current: "#36b37e", imported: "#f2a900", mocked: "#e05262", demo: "#8bd3ff" }
 };
 let config; let draftLogo = "";
-let draftIcons = { resourceIconUrl: "", facilityIconUrl: "" };
+let draftIcons = { facilityIconUrl: "" };
+let draftResourceIcons = {};
 let importInspection = null;
 let importMapping = {};
 let fileReadSequence = 0;
@@ -55,6 +56,56 @@ function handleIconUpload(kind, fileInput) {
   reader.addEventListener("load", () => { $(`${kind}IconUrl`).value = ""; previewIcon(kind, String(reader.result), "Uploaded icon ready to save in this browser."); });
   reader.readAsDataURL(file);
 }
+function renderResourceIconCards(saved = {}) {
+  draftResourceIcons = {};
+  const cards = RESOURCE_SYMBOLS.map((symbol) => {
+    const choice = saved[symbol.value] || {};
+    draftResourceIcons[symbol.value] = { catalogValue: choice.catalogValue || "", url: choice.url || "" };
+    const card = document.createElement("article"); card.className = "resource-icon-card"; card.dataset.resourceIcon = symbol.value;
+    const preview = document.createElement("img"); preview.className = "resource-category-preview"; preview.alt = `${symbol.label} icon preview`;
+    const title = document.createElement("h5"); title.textContent = symbol.label;
+    const selectLabel = document.createElement("label"); selectLabel.className = "cfg-field"; selectLabel.textContent = "Icon selection";
+    const select = document.createElement("select"); select.dataset.iconChoice = symbol.value;
+    select.append(new Option(`Original — ${symbol.label}`, "original"));
+    RESOURCE_SYMBOLS.forEach((item) => select.append(new Option(item.label, `catalog:${item.value}`)));
+    select.append(new Option("Custom image", "custom")); selectLabel.append(select);
+    const urlLabel = document.createElement("label"); urlLabel.className = "cfg-field"; urlLabel.textContent = "Custom HTTPS image URL";
+    const url = document.createElement("input"); url.type = "url"; url.placeholder = "https://agency.gov/icon.svg"; url.value = choice.url?.startsWith("data:") ? "" : choice.url || ""; urlLabel.append(url);
+    const uploadLabel = document.createElement("label"); uploadLabel.className = "cfg-field"; uploadLabel.textContent = "Upload custom image";
+    const upload = document.createElement("input"); upload.type = "file"; upload.accept = "image/png,image/jpeg,image/gif,image/webp"; uploadLabel.append(upload);
+    const reset = document.createElement("button"); reset.type = "button"; reset.className = "btn btn-quiet"; reset.textContent = "Use original";
+    const status = document.createElement("p"); status.className = "cfg-note"; status.setAttribute("role", "status");
+    const redraw = (message = "") => {
+      const current = draftResourceIcons[symbol.value];
+      const selected = RESOURCE_SYMBOLS.find((item) => item.value === current.catalogValue);
+      preview.src = current.url || selected?.url || symbol.url;
+      select.value = current.url ? "custom" : current.catalogValue ? `catalog:${current.catalogValue}` : "original";
+      status.textContent = message || (current.url ? "Custom image selected." : selected ? `Using ${selected.label} icon.` : "Original category icon selected.");
+    };
+    select.addEventListener("change", () => {
+      if (select.value === "original") { draftResourceIcons[symbol.value] = { catalogValue: "", url: "" }; url.value = ""; }
+      else if (select.value.startsWith("catalog:")) { draftResourceIcons[symbol.value] = { catalogValue: select.value.slice(8), url: "" }; url.value = ""; }
+      else draftResourceIcons[symbol.value] = { catalogValue: "", url: draftResourceIcons[symbol.value].url || "" };
+      redraw();
+    });
+    url.addEventListener("change", () => {
+      const value = url.value.trim();
+      if (value && !/^https:\/\//i.test(value)) { status.textContent = "Custom icon URL must use HTTPS."; return; }
+      draftResourceIcons[symbol.value] = { catalogValue: "", url: value }; upload.value = ""; redraw();
+    });
+    upload.addEventListener("change", () => {
+      const file = upload.files?.[0]; if (!file) return;
+      if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.size > 102400) { upload.value = ""; status.textContent = "Choose PNG, JPEG, GIF, or WebP no larger than 100 KB."; return; }
+      const reader = new FileReader(); reader.addEventListener("load", () => { draftResourceIcons[symbol.value] = { catalogValue: "", url: String(reader.result) }; url.value = ""; redraw("Uploaded image ready to save in this browser."); }); reader.readAsDataURL(file);
+    });
+    reset.addEventListener("click", () => { draftResourceIcons[symbol.value] = { catalogValue: "", url: "" }; url.value = ""; upload.value = ""; redraw(); });
+    const controls = document.createElement("div"); controls.className = "resource-icon-controls"; controls.append(title, selectLabel, urlLabel, uploadLabel, reset, status);
+    const previewWrap = document.createElement("div"); previewWrap.className = "resource-category-preview-wrap"; previewWrap.append(preview);
+    card.append(previewWrap, controls); redraw(); return card;
+  });
+  $("resourceIconGrid").replaceChildren(...cards);
+}
+
 function renderImportSession(payload, message = "") {
   $("stagedLoadedCount").textContent = payload?.records?.length ?? 0;
   $("stagedIgnoredCount").textContent = payload?.ignoredRows ?? 0;
@@ -273,7 +324,7 @@ function populate(c) {
   config = c; applyPresentation(c);
   const brand = c.branding || {}; const labels = c.labels || {}; const colors = { ...defaults.colors, ...brand.colors }; const status = { ...defaults.status, ...c.statusColors }; const resource = { ...defaults.resource, ...c.resourceColors };
   $("appName").value = brand.appName || "Asset Management"; $("subtitle").value = brand.subtitle || "Operational inventory preview"; $("logoUrl").value = brand.logoUrl?.startsWith("data:") ? "" : brand.logoUrl || ""; previewLogo(brand.logoUrl || "", brand.logoUrl ? "Current custom logo." : "Default AM mark selected.");
-  prepareIcon("resource", c.symbols?.resourceIconUrl || ""); prepareIcon("facility", c.symbols?.facilityIconUrl || "");
+  renderResourceIconCards(c.symbols?.resourceIcons || {}); prepareIcon("facility", c.symbols?.facilityIconUrl || "");
   for (const [id, key, fallback] of [["inventoryHeading", "inventoryHeading", "Resources & facilities"], ["resourcesLabel", "resourcesTab", "Resources"], ["facilitiesLabel", "facilitiesTab", "Facilities"], ["importLabel", "settingsImport", "Import local CSV"], ["selectionHeading", "selectionHeading", "Inventory detail"]]) $(id).value = labels[key] || fallback;
   for (const [id, key] of [["navy", "navy"], ["background", "background"], ["panel", "panel"], ["panelAlt", "panelAlt"], ["panelStrong", "panelStrong"], ["border", "border"], ["textColor", "text"], ["muted", "muted"], ["faint", "faint"], ["accent", "accent"], ["accentStrong", "accentStrong"], ["blue", "blue"], ["green", "green"], ["red", "red"], ["focus", "focus"]]) $(id).value = colors[key];
   for (const [id, key] of [["statusAvailable", "available"], ["statusLimited", "limited"], ["statusUnavailable", "unavailable"], ["statusUnknown", "unknown"]]) $(id).value = status[key];
@@ -285,7 +336,7 @@ function populate(c) {
   $("mapLongitude").value = c.map?.center?.longitude ?? ""; $("mapLatitude").value = c.map?.center?.latitude ?? ""; $("mapZoom").value = c.map?.zoom ?? 10; $("basemap").value = c.map?.basemap || "dark-gray-vector"; $("importLimitMb").value = Number(c.import?.maxFileBytes || 10000000) / 1_000_000;
   $("importPrivacyNote").textContent = c.import?.privacyNote || $("importPrivacyNote").textContent;
   renderImportSession(readImportSession());
-  const values = [["Storage", "localStorage (public configuration only)"], ["Portal", c.portalUrl], ["OAuth mode", c.oauth?.mode], ["OAuth redirect", c.oauth?.redirectUrl], ["Web map item", c.webMapItemId], ["Web map URL", c.webMapUrl], ["Feature service item", c.featureServiceItemId], ["Feature service URL", c.serviceUrl], ["Resource / facility layers", `${c.layers?.resources} / ${c.layers?.facilities}`], ["Resource icon", c.symbols?.resourceIconUrl ? "Custom browser override" : "Category symbols"], ["Facility icon", c.symbols?.facilityIconUrl ? "Custom browser override" : "Default facility symbol"], ["Map", `${c.map?.center?.longitude}, ${c.map?.center?.latitude} · zoom ${c.map?.zoom} · ${c.map?.basemap}`], ["Import limit", `${(c.import?.maxFileBytes / 1_000_000).toFixed(1)} MB`], ["Service behavior", "Explicit signed-in resource and facility writes only when each target layer reports the required capability"]];
+  const values = [["Storage", "localStorage (public configuration only)"], ["Portal", c.portalUrl], ["OAuth mode", c.oauth?.mode], ["OAuth redirect", c.oauth?.redirectUrl], ["Web map item", c.webMapItemId], ["Web map URL", c.webMapUrl], ["Feature service item", c.featureServiceItemId], ["Feature service URL", c.serviceUrl], ["Resource / facility layers", `${c.layers?.resources} / ${c.layers?.facilities}`], ["Resource icons", `${Object.values(c.symbols?.resourceIcons || {}).filter((choice) => choice?.url || choice?.catalogValue).length} category override(s)`], ["Facility icon", c.symbols?.facilityIconUrl ? "Custom browser override" : "Default facility symbol"], ["Map", `${c.map?.center?.longitude}, ${c.map?.center?.latitude} · zoom ${c.map?.zoom} · ${c.map?.basemap}`], ["Import limit", `${(c.import?.maxFileBytes / 1_000_000).toFixed(1)} MB`], ["Service behavior", "Explicit signed-in resource and facility writes only when each target layer reports the required capability"]];
   $("diagnostics").replaceChildren(...values.flatMap(([term, value]) => { const dt = document.createElement("dt"); const dd = document.createElement("dd"); dt.textContent = term; dd.textContent = value || "Not configured"; return [dt, dd]; }));
 }
 function values() {
@@ -297,7 +348,7 @@ function values() {
     branding: { appName: $("appName").value.trim() || "Asset Management", subtitle: $("subtitle").value.trim() || "Operational inventory preview", logoUrl: draftLogo, colors },
     labels: { inventoryHeading: $("inventoryHeading").value.trim() || "Resources & facilities", resourcesTab: $("resourcesLabel").value.trim() || "Resources", facilitiesTab: $("facilitiesLabel").value.trim() || "Facilities", settingsImport: $("importLabel").value.trim() || "Import local CSV", selectionHeading: $("selectionHeading").value.trim() || "Inventory detail" },
     statusColors: { available: $("statusAvailable").value, limited: $("statusLimited").value, unavailable: $("statusUnavailable").value, unknown: $("statusUnknown").value }, resourceColors: { current: $("resourceCurrent").value, imported: $("resourceImported").value, mocked: $("resourceMocked").value, demo: $("resourceDemo").value },
-    symbols: { resourceIconUrl: $("resourceIconUrl").value.trim() || draftIcons.resourceIconUrl, facilityIconUrl: $("facilityIconUrl").value.trim() || draftIcons.facilityIconUrl },
+    symbols: { resourceIconUrl: "", resourceIcons: draftResourceIcons, facilityIconUrl: $("facilityIconUrl").value.trim() || draftIcons.facilityIconUrl },
     operatorDefaults: { showMockedPoints: $("showMockedPoints").checked, compactInventory: $("compactInventory").checked, defaultSourceFilter: $("defaultSourceFilter").value }
   };
 }
@@ -324,15 +375,13 @@ document.querySelectorAll(".help-nav a").forEach((link) => link.addEventListener
 $("previewLogo").addEventListener("click", () => { const url = $("logoUrl").value.trim(); if (url && !/^https:\/\//i.test(url)) { previewLogo("", "Logo URL must use HTTPS."); return; } previewLogo(url, url ? "Logo URL ready to save." : "Default AM mark selected."); });
 $("defaultLogo").addEventListener("click", () => { $("logoUrl").value = ""; $("logoUpload").value = ""; previewLogo("", "Default AM mark selected."); });
 $("logoUpload").addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.size > 307200) { event.target.value = ""; previewLogo("", "Choose PNG, JPEG, GIF, or WebP no larger than 300 KB."); return; } const reader = new FileReader(); reader.addEventListener("load", () => { $("logoUrl").value = ""; previewLogo(String(reader.result), "Uploaded logo ready to save."); }); reader.readAsDataURL(file); });
-for (const kind of ["resource", "facility"]) {
-  $(`preview${kind[0].toUpperCase()}${kind.slice(1)}Icon`).addEventListener("click", () => {
-    const url = $(`${kind}IconUrl`).value.trim();
-    if (url && !/^https:\/\//i.test(url)) { $(`${kind}IconStatus`).textContent = "Icon URL must use HTTPS."; return; }
-    previewIcon(kind, url);
-  });
-  $(`default${kind[0].toUpperCase()}${kind.slice(1)}Icon`).addEventListener("click", () => { $(`${kind}IconUrl`).value = ""; $(`${kind}IconUpload`).value = ""; previewIcon(kind, ""); });
-  $(`${kind}IconUpload`).addEventListener("change", (event) => handleIconUpload(kind, event.target));
-}
+$("previewFacilityIcon").addEventListener("click", () => {
+  const url = $("facilityIconUrl").value.trim();
+  if (url && !/^https:\/\//i.test(url)) { $("facilityIconStatus").textContent = "Icon URL must use HTTPS."; return; }
+  previewIcon("facility", url);
+});
+$("defaultFacilityIcon").addEventListener("click", () => { $("facilityIconUrl").value = ""; $("facilityIconUpload").value = ""; previewIcon("facility", ""); });
+$("facilityIconUpload").addEventListener("change", (event) => handleIconUpload("facility", event.target));
 $("settingsCsvFile").addEventListener("change", inspectSelectedFile);
 $("resetAutomaticMappings").addEventListener("click", applyAutomaticMappings);
 $("settingsImportForm").addEventListener("submit", stageImport);
@@ -347,4 +396,6 @@ $("downloadHelpPdf").addEventListener("click", downloadHelp);
     populate(loaded);
     try { authState = await initializeAuth(loaded); } catch { authState = { signedIn: false }; }
   } catch (error) { announce(error.message, "error"); }
+})();
+); }
 })();

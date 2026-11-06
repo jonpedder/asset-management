@@ -1,6 +1,6 @@
 import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
-import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
+import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL, facilityLabelingInfo, facilityRenderer } from "./facility-symbols.js?v=20261106-2";
 import { summarizeFacilityResources } from "./facility-resource-summary.js?v=20261106-1";
 
@@ -29,7 +29,8 @@ const symbols = {
 };
 
 export async function initializeMap(config, onSelect, options = {}) {
-  resourceIconOverride = config.symbols?.resourceIconUrl || "";
+  const categoryIcons = config.symbols?.resourceIcons || {};
+  resourceIconOverride = Object.keys(categoryIcons).length ? categoryIcons : config.symbols?.resourceIconUrl || "";
   facilityIconOverride = config.symbols?.facilityIconUrl || "";
   resourceProvider = typeof options.getResources === "function" ? options.getResources : () => [];
   if (config.resourceColors) {

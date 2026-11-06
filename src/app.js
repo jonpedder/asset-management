@@ -3,14 +3,14 @@ import { readImportSession, updateImportSessionRecord, updateImportSessionRecord
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView, captureResourceReportMap } from "./map.js?v=20261106-15";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView, captureResourceReportMap } from "./map.js?v=20261106-16";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
 import { loadConfig } from "./config.js?v=20261106-3";
 import { applyPresentation } from "./presentation.js";
-import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
+import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
 import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-3";
@@ -82,6 +82,10 @@ function toast(message, tone = "info") {
   window.setTimeout(() => node.remove(), 5500);
 }
 
+function configuredResourceIcons() {
+  const choices = state.config?.symbols?.resourceIcons || {};
+  return Object.keys(choices).length ? choices : state.config?.symbols?.resourceIconUrl || "";
+}
 function currentResources() {
   return state.demoActive ? DEMO_RESOURCES : state.resources;
 }
@@ -220,7 +224,7 @@ function renderResources() {
     return;
   }
   elements.resourceRows.innerHTML = records.map((record) => {
-    const symbol = resourceSymbolFor(record, state.config?.symbols?.resourceIconUrl || "");
+    const symbol = resourceSymbolFor(record, configuredResourceIcons());
     return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.assetType)} details">
       <td class="select-column"><input class="resource-select" type="checkbox" data-select-id="${escapeHtml(record.id)}" ${state.selectedResourceIds.has(record.id) ? "checked" : ""} aria-label="Select ${escapeHtml(record.assetType)} for bulk actions"></td>

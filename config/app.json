@@ -30,6 +30,6 @@
   "labels": { "inventoryHeading": "Resources & facilities", "resourcesTab": "Resources", "facilitiesTab": "Facilities", "settingsImport": "Import local CSV", "selectionHeading": "Inventory detail" },
   "statusColors": { "available": "#36b37e", "limited": "#f2a900", "unavailable": "#e05262", "unknown": "#afc3cf" },
   "resourceColors": { "current": "#36b37e", "imported": "#f2a900", "mocked": "#e05262", "demo": "#8bd3ff" },
-  "symbols": { "resourceIconUrl": "", "facilityIconUrl": "" },
+  "symbols": { "resourceIconUrl": "", "resourceIcons": {}, "facilityIconUrl": "" },
   "operatorDefaults": { "showMockedPoints": true, "compactInventory": false, "defaultSourceFilter": "" }
 }

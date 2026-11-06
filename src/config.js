@@ -2,6 +2,7 @@ export const CONFIG_OVERRIDE_KEY = "asset-management-config-overrides-v1";
 
 const object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
 const scalar = (value) => ["string", "number", "boolean"].includes(typeof value) ? value : undefined;
+const RESOURCE_ICON_KEYS = ["communications", "public-works", "medical", "hazmat", "law-enforcement", "search-rescue", "fire", "mass-care", "transportation", "animals-agriculture", "energy", "water", "facilities", "other"];
 const allowed = {
   portalUrl: true, featureServiceItemId: true, webMapItemId: true, webMapUrl: true, serviceUrl: true,
   layers: ["resources", "facilities"],
@@ -20,6 +21,19 @@ function pickMap(source, keys) {
   return result;
 }
 
+function sanitizeResourceIcons(value) {
+  const source = object(value); const result = {};
+  for (const key of RESOURCE_ICON_KEYS) {
+    if (!(key in source)) continue;
+    const choice = object(source[key]);
+    result[key] = {
+      catalogValue: RESOURCE_ICON_KEYS.includes(choice.catalogValue) ? choice.catalogValue : "",
+      url: typeof choice.url === "string" ? choice.url : ""
+    };
+  }
+  return result;
+}
+
 export function sanitizeConfigOverrides(value) {
   const source = object(value);
   if (!Object.keys(source).length) return {};
@@ -34,7 +48,9 @@ export function sanitizeConfigOverrides(value) {
   const branding = object(source.branding);
   result.branding = pickMap(branding, ["appName", "subtitle", "logoUrl"]);
   result.branding.colors = pickMap(object(branding.colors), ["navy", "background", "panel", "panelAlt", "panelStrong", "border", "text", "muted", "faint", "accent", "accentStrong", "blue", "green", "red", "focus"]);
-  for (const key of ["labels", "statusColors", "resourceColors", "symbols"]) result[key] = pickMap(object(source[key]), allowed[key]);
+  for (const key of ["labels", "statusColors", "resourceColors"]) result[key] = pickMap(object(source[key]), allowed[key]);
+  result.symbols = pickMap(object(source.symbols), allowed.symbols);
+  result.symbols.resourceIcons = sanitizeResourceIcons(object(source.symbols).resourceIcons);
   result.operatorDefaults = pickMap(object(source.operatorDefaults), allowed.operatorDefaults);
   return result;
 }
@@ -53,7 +69,7 @@ export function mergeConfig(baseValue, overrideValue) {
     labels: mergeObjects(base.labels, overrides.labels),
     statusColors: mergeObjects(base.statusColors, overrides.statusColors),
     resourceColors: mergeObjects(base.resourceColors, overrides.resourceColors),
-    symbols: mergeObjects(base.symbols, overrides.symbols),
+    symbols: { ...mergeObjects(base.symbols, overrides.symbols), resourceIcons: mergeObjects(base.symbols?.resourceIcons, overrides.symbols?.resourceIcons) },
     operatorDefaults: mergeObjects(base.operatorDefaults, overrides.operatorDefaults)
   };
 }
@@ -74,6 +90,10 @@ export function validateConfig(config) {
   if (!/^https:\/\//i.test(config.portalUrl || "") || !/^https:\/\//i.test(config.serviceUrl || "")) throw new Error("Portal and feature service URLs must use HTTPS.");
   if (config.webMapUrl && !/^https:\/\//i.test(config.webMapUrl)) throw new Error("Web map URL must use HTTPS.");
   for (const [label, value] of [["Resource icon", config.symbols?.resourceIconUrl], ["Facility icon", config.symbols?.facilityIconUrl]]) if (value && !/^https:\/\//i.test(value) && !/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(value)) throw new Error(`${label} must use HTTPS or a supported browser-local image upload.`);
+  for (const [key, choice] of Object.entries(object(config.symbols?.resourceIcons))) {
+    if (!RESOURCE_ICON_KEYS.includes(key) || (choice.catalogValue && !RESOURCE_ICON_KEYS.includes(choice.catalogValue))) throw new Error("Resource icon selection is invalid.");
+    if (choice.url && !/^https:\/\//i.test(choice.url) && !/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(choice.url)) throw new Error("Resource category icons must use HTTPS or a supported browser-local image upload.");
+  }
   if (!config.oauth?.clientId) throw new Error("OAuth client ID is required.");
   if (config.oauth.mode !== "redirect") throw new Error("OAuth mode must remain full-page redirect.");
   if (!/^https:\/\//i.test(config.oauth.redirectUrl || "")) throw new Error("OAuth redirect URL must use HTTPS.");

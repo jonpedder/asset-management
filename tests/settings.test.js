@@ -15,7 +15,7 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   assert.match(html, /id="settingsImportForm"/); assert.match(html, /id="settingsCsvFile"/); assert.match(html, /id="clearStagedImport"/); assert.match(html, /id="openInventoryMap"/);
   assert.match(html, /sessionStorage/); assert.match(html, /Map any headings/); assert.match(html, /id="fieldMappingRegion"/); assert.match(html, /id="mappingRows"/); assert.match(html, /id="resetAutomaticMappings"/); assert.match(html, /id="mappingPreview"/);
   assert.match(html, /Asset Type is required/); assert.match(html, /id="downloadHelpPdf"/); assert.match(html, /localStorage/); assert.match(html, /300 KB/); assert.match(html, /32-row customer draft/); assert.match(html, /1,465/);
-  assert.match(html, /id="resourceIconUrl"/); assert.match(html, /id="facilityIconUrl"/); assert.match(html, /id="resourceIconPreview"/); assert.match(html, /id="facilityIconPreview"/);
+  assert.match(html, /id="resourceIconGrid"/); assert.match(html, /Resource category icons/); assert.match(html, /no larger than 100 KB/); assert.match(html, /id="facilityIconUrl"/); assert.match(html, /id="facilityIconPreview"/);
   assert.match(html, /id="webMapItemId"/); assert.match(html, /id="webMapUrl"/); assert.match(html, /Feature service REST URL/);
   assert.match(html, /Sorting, filtering, resizing, map symbols, and editing/); assert.match(html, /Reset sort order restores both lists/); assert.match(html, /Editing Information banner is collapsed by default/); assert.match(html, /row highlighted with a subtle amber glow/); assert.match(html, /return to the previous map viewpoint/); assert.match(html, /Available resources by type breakdown/); assert.match(html, /id="help-reports"/); assert.match(html, /temporarily isolates the mapped report resources/);
   assert.match(html, /id="geocodeDialog"/); assert.match(html, /id="geocodeConfirm"/); assert.match(html, /Geocoding requires a second confirmation warning/); assert.match(html, /js\.arcgis\.com\/5\.1/);
@@ -30,7 +30,7 @@ test("settings runtime inspects, maps, previews, normalizes, and stages the sele
   assert.match(source, /records\.map\(normalizeImportedRecord\)/);
   assert.match(source, /saveImportSession/);
   assert.match(source, /settingsCsvFile.*change.*inspectSelectedFile/);
-  assert.match(source, /previewIcon\(kind/); assert.match(source, /handleIconUpload\(kind/); assert.match(source, /resourceIconUrl/); assert.match(source, /facilityIconUrl/);
+  assert.match(source, /function renderResourceIconCards/); assert.match(source, /RESOURCE_SYMBOLS\.map/); assert.match(source, /catalog:/); assert.match(source, /file\.size > 102400/); assert.match(source, /facilityIconUrl/);
   assert.match(source, /webMapItemId/); assert.match(source, /webMapUrl/);
   assert.match(source, /function confirmGeocoding/); assert.match(source, /buildGeocodePlan\(normalized\)/); assert.match(source, /addressesToLocations/); assert.match(source, /Geocoding uses ArcGIS credits/); assert.match(source, /location\.assign\("\.\/index\.html"\)/);
 });
@@ -54,7 +54,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   assert.match(app, /function openDetailPanel/); assert.match(app, /function closeDetailPanel/); assert.match(app, /detailClose\.addEventListener\("click", closeDetailPanel\)/);
   assert.match(app, /function syncSelectedRows/); assert.match(app, /selected-row/); assert.match(app, /restoreListView\(\)/);
   assert.match(app, /function reportScopedResources/); assert.match(app, /filterResourceRecords\(allResourceRecords\(\), currentResourceFilters\(\)\)/); assert.doesNotMatch(app, /filteredResourceRecords/); assert.match(app, /function exportSelectedReport/); assert.match(app, /captureResourceReportMap\(report\.records\)/); assert.match(app, /buildInventoryReportPdf/);
-  assert.match(app, /state\.config\?\.symbols\?\.resourceIconUrl/); assert.match(app, /state\.config\?\.symbols\?\.facilityIconUrl/);
+  assert.match(app, /symbols\?\.resourceIcons/); assert.match(app, /configuredResourceIcons\(\)/); assert.match(app, /state\.config\?\.symbols\?\.facilityIconUrl/);
   assert.match(app, /resetSortOrder\.addEventListener\("click"[\s\S]*resourceSort = \{ key: null[\s\S]*facilitySort = \{ key: null/);
   assert.equal((app.match(/<details class="editing-information">/g) || []).length, 2);
   assert.match(app, /<summary>Editing Information<\/summary>/); assert.doesNotMatch(app, /<details class="editing-information" open>/);

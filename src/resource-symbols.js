@@ -17,10 +17,21 @@ export const RESOURCE_SYMBOLS = [
   { value: "other", label: "Other Resources", icon: "boxes-stacked", keywords: [] }
 ].map((definition) => ({ ...definition, url: iconUrl(definition.icon) }));
 
-export function resourceSymbolFor(record = {}, overrideUrl = "") {
+export function resolveResourceSymbol(definition, overrides = "") {
+  if (typeof overrides === "string") return overrides ? { ...definition, url: overrides } : definition;
+  const choice = overrides?.[definition.value];
+  if (choice?.url) return { ...definition, url: choice.url, selectedIcon: "custom" };
+  if (choice?.catalogValue) {
+    const selected = RESOURCE_SYMBOLS.find((item) => item.value === choice.catalogValue);
+    if (selected) return { ...definition, url: selected.url, selectedIcon: selected.value };
+  }
+  return definition;
+}
+
+export function resourceSymbolFor(record = {}, overrides = "") {
   const text = `${record.category || ""} ${record.assetType || ""}`.toLowerCase();
   const definition = RESOURCE_SYMBOLS.find((item) => item.keywords.some((keyword) => text.includes(keyword))) || RESOURCE_SYMBOLS.at(-1);
-  return overrideUrl ? { ...definition, url: overrideUrl } : definition;
+  return resolveResourceSymbol(definition, overrides);
 }
 
 export function resourceLabelingInfo(fieldName = "ResourceName") {
@@ -41,8 +52,8 @@ export function resourceLabelingInfo(fieldName = "ResourceName") {
   }];
 }
 
-export function resourceRenderer(fieldName, overrideUrl = "") {
-  if (overrideUrl) return { type: "simple", symbol: { type: "picture-marker", url: overrideUrl, width: "14pt", height: "14pt" } };
+export function resourceRenderer(fieldName, overrides = "") {
+  if (typeof overrides === "string" && overrides) return { type: "simple", symbol: { type: "picture-marker", url: overrides, width: "14pt", height: "14pt" } };
   const field = String(fieldName || "NIMS_Category").replaceAll('"', "");
   const clauses = RESOURCE_SYMBOLS.filter((definition) => definition.value !== "other").map((definition) => {
     const tests = definition.keywords.map((keyword) => `Includes(value, '${keyword.replaceAll("'", "\\'")}')`).join(" || ");
@@ -55,9 +66,9 @@ export function resourceRenderer(fieldName, overrideUrl = "") {
     uniqueValueInfos: RESOURCE_SYMBOLS.map((definition) => ({
       value: definition.value,
       label: definition.label,
-      symbol: { type: "picture-marker", url: definition.url, width: "14pt", height: "14pt" }
+      symbol: { type: "picture-marker", url: resolveResourceSymbol(definition, overrides).url, width: "14pt", height: "14pt" }
     })),
     defaultLabel: "Other Resources",
-    defaultSymbol: { type: "picture-marker", url: RESOURCE_SYMBOLS.at(-1).url, width: "14pt", height: "14pt" }
+    defaultSymbol: { type: "picture-marker", url: resolveResourceSymbol(RESOURCE_SYMBOLS.at(-1), overrides).url, width: "14pt", height: "14pt" }
   };
 }

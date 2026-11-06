@@ -28,6 +28,17 @@ test("custom resource icon overrides category symbols", () => {
   assert.equal(renderer.symbol.width, "14pt");
 });
 
+test("per-category icon selections resolve catalog and custom images", () => {
+  const choices = { communications: { catalogValue: "medical", url: "" }, fire: { catalogValue: "", url: "https://example.com/fire.svg" } };
+  assert.match(resourceSymbolFor({ category: "Communications" }, choices).url, /kit-medical\.svg$/);
+  assert.equal(resourceSymbolFor({ category: "Firefighting" }, choices).url, "https://example.com/fire.svg");
+  assert.match(resourceSymbolFor({ category: "Public Works" }, choices).url, /helmet-safety\.svg$/);
+  const renderer = resourceRenderer("NIMS_Category", choices);
+  assert.equal(renderer.type, "unique-value");
+  assert.match(renderer.uniqueValueInfos.find((info) => info.value === "communications").symbol.url, /kit-medical\.svg$/);
+  assert.equal(renderer.uniqueValueInfos.find((info) => info.value === "fire").symbol.url, "https://example.com/fire.svg");
+});
+
 test("resource labels appear only at metropolitan scale and closer", () => {
   const [label] = resourceLabelingInfo("ResourceName");
   assert.match(label.labelExpressionInfo.expression, /ResourceName/);
