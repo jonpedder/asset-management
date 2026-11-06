@@ -1,9 +1,9 @@
 export const FACILITY_SYMBOL_URL = new URL("../assets/resource-icons/facility-management.svg", import.meta.url).href;
 
-export function facilityRenderer() {
+export function facilityRenderer(overrideUrl = "") {
   return {
     type: "simple",
-    symbol: { type: "picture-marker", url: FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" }
+    symbol: { type: "picture-marker", url: overrideUrl || FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" }
   };
 }
 

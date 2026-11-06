@@ -1,7 +1,7 @@
 import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
-import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-2";
-import { FACILITY_SYMBOL_URL, facilityLabelingInfo, facilityRenderer } from "./facility-symbols.js?v=20261106-1";
+import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
+import { FACILITY_SYMBOL_URL, facilityLabelingInfo, facilityRenderer } from "./facility-symbols.js?v=20261106-2";
 
 let Graphic;
 let GraphicsLayer;
@@ -14,6 +14,8 @@ let placementPreviewLayer;
 let serviceLayers = [];
 let selectHandler = () => {};
 let pointSelection = null;
+let resourceIconOverride = "";
+let facilityIconOverride = "";
 
 const symbols = {
   imported: { type: "simple-marker", style: "circle", size: 10, color: "#f2a900", outline: { color: "#071824", width: 1.5 } },
@@ -24,6 +26,8 @@ const symbols = {
 };
 
 export async function initializeMap(config, onSelect, options = {}) {
+  resourceIconOverride = config.symbols?.resourceIconUrl || "";
+  facilityIconOverride = config.symbols?.facilityIconUrl || "";
   if (config.resourceColors) {
     symbols.imported.color = config.resourceColors.imported || symbols.imported.color;
     symbols.mocked.color = config.resourceColors.mocked || symbols.mocked.color;
@@ -151,12 +155,12 @@ export async function addServiceLayers(config) {
   resourceLayer.popupEnabled = true;
   facilityLayer.popupEnabled = true;
   const resourceBindings = inferFieldBindings(resourceLayer.fields || []);
-  resourceLayer.renderer = resourceRenderer(resourceBindings.category || "NIMS_Category");
+  resourceLayer.renderer = resourceRenderer(resourceBindings.category || "NIMS_Category", resourceIconOverride);
   resourceLayer.labelsVisible = true;
   resourceLayer.labelingInfo = resourceLabelingInfo(resourceBindings.assetType || "ResourceName");
   resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
   const facilityBindings = inferFacilityBindings(facilityLayer.fields || [], facilityLayer.objectIdField);
-  facilityLayer.renderer = facilityRenderer();
+  facilityLayer.renderer = facilityRenderer(facilityIconOverride);
   facilityLayer.labelsVisible = true;
   facilityLayer.labelingInfo = facilityLabelingInfo(facilityBindings.name || "SiteName");
   facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
@@ -167,12 +171,12 @@ export async function addServiceLayers(config) {
 }
 
 function resourceGraphicSymbol(record) {
-  const definition = resourceSymbolFor(record);
+  const definition = resourceSymbolFor(record, resourceIconOverride);
   return { type: "picture-marker", url: definition.url, width: "14pt", height: "14pt" };
 }
 
 function facilityGraphicSymbol() {
-  return { type: "picture-marker", url: FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" };
+  return { type: "picture-marker", url: facilityIconOverride || FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" };
 }
 
 function graphicFor(record, symbol) {

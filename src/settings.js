@@ -4,6 +4,8 @@ import { buildHelpPdf } from "./help-pdf.js";
 import { inspectCsv, mapCsvRecords, TARGET_FIELDS } from "./csv.js";
 import { normalizeImportedRecord } from "./normalize.js";
 import { clearImportSession, readImportSession, saveImportSession } from "./import-session.js";
+import { RESOURCE_SYMBOLS } from "./resource-symbols.js?v=20261106-3";
+import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 
 const $ = (id) => document.getElementById(id);
 const defaults = {
@@ -12,6 +14,7 @@ const defaults = {
   resource: { current: "#36b37e", imported: "#f2a900", mocked: "#e05262", demo: "#8bd3ff" }
 };
 let config; let draftLogo = "";
+let draftIcons = { resourceIconUrl: "", facilityIconUrl: "" };
 let importInspection = null;
 let importMapping = {};
 let fileReadSequence = 0;
@@ -25,6 +28,29 @@ function previewLogo(url, message = "") {
   draftLogo = url; $("logoPreview").hidden = !url; $("defaultLogoPreview").hidden = Boolean(url);
   if (url) $("logoPreview").src = url;
   $("logoStatus").textContent = message;
+}
+const defaultIconUrl = { resource: RESOURCE_SYMBOLS.find((symbol) => symbol.value === "other")?.url || RESOURCE_SYMBOLS[0].url, facility: FACILITY_SYMBOL_URL };
+function previewIcon(kind, url = "", message = "") {
+  const key = `${kind}IconUrl`;
+  draftIcons[key] = url;
+  $(`${kind}IconPreview`).src = url || defaultIconUrl[kind];
+  $(`${kind}IconStatus`).textContent = message || (url ? "Custom icon ready to save." : kind === "resource" ? "Category-based resource icons selected." : "Default facility-management icon selected.");
+}
+function prepareIcon(kind, url = "") {
+  $(`${kind}IconUrl`).value = url.startsWith("data:") ? "" : url;
+  previewIcon(kind, url);
+}
+function handleIconUpload(kind, fileInput) {
+  const file = fileInput.files?.[0];
+  if (!file) return;
+  if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.size > 307200) {
+    fileInput.value = "";
+    $(`${kind}IconStatus`).textContent = "Choose PNG, JPEG, GIF, or WebP no larger than 300 KB.";
+    return;
+  }
+  const reader = new FileReader();
+  reader.addEventListener("load", () => { $(`${kind}IconUrl`).value = ""; previewIcon(kind, String(reader.result), "Uploaded icon ready to save in this browser."); });
+  reader.readAsDataURL(file);
 }
 function renderImportSession(payload, message = "") {
   $("stagedLoadedCount").textContent = payload?.records?.length ?? 0;
@@ -163,28 +189,31 @@ function populate(c) {
   config = c; applyPresentation(c);
   const brand = c.branding || {}; const labels = c.labels || {}; const colors = { ...defaults.colors, ...brand.colors }; const status = { ...defaults.status, ...c.statusColors }; const resource = { ...defaults.resource, ...c.resourceColors };
   $("appName").value = brand.appName || "Asset Management"; $("subtitle").value = brand.subtitle || "Operational inventory preview"; $("logoUrl").value = brand.logoUrl?.startsWith("data:") ? "" : brand.logoUrl || ""; previewLogo(brand.logoUrl || "", brand.logoUrl ? "Current custom logo." : "Default AM mark selected.");
+  prepareIcon("resource", c.symbols?.resourceIconUrl || ""); prepareIcon("facility", c.symbols?.facilityIconUrl || "");
   for (const [id, key, fallback] of [["inventoryHeading", "inventoryHeading", "Resources & facilities"], ["resourcesLabel", "resourcesTab", "Resources"], ["facilitiesLabel", "facilitiesTab", "Facilities"], ["importLabel", "settingsImport", "Import local CSV"], ["selectionHeading", "selectionHeading", "Inventory detail"]]) $(id).value = labels[key] || fallback;
   for (const [id, key] of [["navy", "navy"], ["background", "background"], ["panel", "panel"], ["panelAlt", "panelAlt"], ["panelStrong", "panelStrong"], ["border", "border"], ["textColor", "text"], ["muted", "muted"], ["faint", "faint"], ["accent", "accent"], ["accentStrong", "accentStrong"], ["blue", "blue"], ["green", "green"], ["red", "red"], ["focus", "focus"]]) $(id).value = colors[key];
   for (const [id, key] of [["statusAvailable", "available"], ["statusLimited", "limited"], ["statusUnavailable", "unavailable"], ["statusUnknown", "unknown"]]) $(id).value = status[key];
   for (const [id, key] of [["resourceCurrent", "current"], ["resourceImported", "imported"], ["resourceMocked", "mocked"], ["resourceDemo", "demo"]]) $(id).value = resource[key];
   $("showMockedPoints").checked = c.operatorDefaults?.showMockedPoints !== false; $("compactInventory").checked = Boolean(c.operatorDefaults?.compactInventory); $("defaultSourceFilter").value = c.operatorDefaults?.defaultSourceFilter || "";
   $("portalUrl").value = c.portalUrl || ""; $("oauthClientId").value = c.oauth?.clientId || ""; $("oauthMode").value = c.oauth?.mode || "redirect"; $("oauthRedirectUrl").value = c.oauth?.redirectUrl || "";
+  $("webMapItemId").value = c.webMapItemId || ""; $("webMapUrl").value = c.webMapUrl || "";
   $("featureServiceItemId").value = c.featureServiceItemId || ""; $("serviceUrl").value = c.serviceUrl || ""; $("resourcesLayer").value = c.layers?.resources ?? 0; $("facilitiesLayer").value = c.layers?.facilities ?? 1;
   $("mapLongitude").value = c.map?.center?.longitude ?? ""; $("mapLatitude").value = c.map?.center?.latitude ?? ""; $("mapZoom").value = c.map?.zoom ?? 10; $("basemap").value = c.map?.basemap || "dark-gray-vector"; $("importLimitMb").value = Number(c.import?.maxFileBytes || 10000000) / 1_000_000;
   $("importPrivacyNote").textContent = c.import?.privacyNote || $("importPrivacyNote").textContent;
   renderImportSession(readImportSession());
-  const values = [["Storage", "localStorage (public configuration only)"], ["Portal", c.portalUrl], ["OAuth mode", c.oauth?.mode], ["OAuth redirect", c.oauth?.redirectUrl], ["Feature service item", c.featureServiceItemId], ["Feature service", c.serviceUrl], ["Resource / facility layers", `${c.layers?.resources} / ${c.layers?.facilities}`], ["Map", `${c.map?.center?.longitude}, ${c.map?.center?.latitude} · zoom ${c.map?.zoom} · ${c.map?.basemap}`], ["Import limit", `${(c.import?.maxFileBytes / 1_000_000).toFixed(1)} MB`], ["Service behavior", "Explicit signed-in resource and facility writes only when each target layer reports the required capability"]];
+  const values = [["Storage", "localStorage (public configuration only)"], ["Portal", c.portalUrl], ["OAuth mode", c.oauth?.mode], ["OAuth redirect", c.oauth?.redirectUrl], ["Web map item", c.webMapItemId], ["Web map URL", c.webMapUrl], ["Feature service item", c.featureServiceItemId], ["Feature service URL", c.serviceUrl], ["Resource / facility layers", `${c.layers?.resources} / ${c.layers?.facilities}`], ["Resource icon", c.symbols?.resourceIconUrl ? "Custom browser override" : "Category symbols"], ["Facility icon", c.symbols?.facilityIconUrl ? "Custom browser override" : "Default facility symbol"], ["Map", `${c.map?.center?.longitude}, ${c.map?.center?.latitude} · zoom ${c.map?.zoom} · ${c.map?.basemap}`], ["Import limit", `${(c.import?.maxFileBytes / 1_000_000).toFixed(1)} MB`], ["Service behavior", "Explicit signed-in resource and facility writes only when each target layer reports the required capability"]];
   $("diagnostics").replaceChildren(...values.flatMap(([term, value]) => { const dt = document.createElement("dt"); const dd = document.createElement("dd"); dt.textContent = term; dd.textContent = value || "Not configured"; return [dt, dd]; }));
 }
 function values() {
   const colors = {}; for (const [id, key] of [["navy", "navy"], ["background", "background"], ["panel", "panel"], ["panelAlt", "panelAlt"], ["panelStrong", "panelStrong"], ["border", "border"], ["textColor", "text"], ["muted", "muted"], ["faint", "faint"], ["accent", "accent"], ["accentStrong", "accentStrong"], ["blue", "blue"], ["green", "green"], ["red", "red"], ["focus", "focus"]]) colors[key] = $(id).value;
   return {
-    portalUrl: $("portalUrl").value.trim(), featureServiceItemId: $("featureServiceItemId").value.trim(), serviceUrl: $("serviceUrl").value.trim().replace(/\/+$/, ""), layers: { resources: Number($("resourcesLayer").value), facilities: Number($("facilitiesLayer").value) },
+    portalUrl: $("portalUrl").value.trim(), webMapItemId: $("webMapItemId").value.trim(), webMapUrl: $("webMapUrl").value.trim(), featureServiceItemId: $("featureServiceItemId").value.trim(), serviceUrl: $("serviceUrl").value.trim().replace(/\/+$/, ""), layers: { resources: Number($("resourcesLayer").value), facilities: Number($("facilitiesLayer").value) },
     oauth: { enabled: true, clientId: $("oauthClientId").value.trim(), mode: "redirect", redirectUrl: $("oauthRedirectUrl").value.trim(), popupCallbackUrl: config.oauth?.popupCallbackUrl || "" },
     map: { basemap: $("basemap").value.trim(), center: { longitude: Number($("mapLongitude").value), latitude: Number($("mapLatitude").value) }, zoom: Number($("mapZoom").value) }, import: { maxFileBytes: Math.round(Number($("importLimitMb").value) * 1_000_000), privacyNote: config.import?.privacyNote || "" },
     branding: { appName: $("appName").value.trim() || "Asset Management", subtitle: $("subtitle").value.trim() || "Operational inventory preview", logoUrl: draftLogo, colors },
     labels: { inventoryHeading: $("inventoryHeading").value.trim() || "Resources & facilities", resourcesTab: $("resourcesLabel").value.trim() || "Resources", facilitiesTab: $("facilitiesLabel").value.trim() || "Facilities", settingsImport: $("importLabel").value.trim() || "Import local CSV", selectionHeading: $("selectionHeading").value.trim() || "Inventory detail" },
     statusColors: { available: $("statusAvailable").value, limited: $("statusLimited").value, unavailable: $("statusUnavailable").value, unknown: $("statusUnknown").value }, resourceColors: { current: $("resourceCurrent").value, imported: $("resourceImported").value, mocked: $("resourceMocked").value, demo: $("resourceDemo").value },
+    symbols: { resourceIconUrl: $("resourceIconUrl").value.trim() || draftIcons.resourceIconUrl, facilityIconUrl: $("facilityIconUrl").value.trim() || draftIcons.facilityIconUrl },
     operatorDefaults: { showMockedPoints: $("showMockedPoints").checked, compactInventory: $("compactInventory").checked, defaultSourceFilter: $("defaultSourceFilter").value }
   };
 }
@@ -211,6 +240,15 @@ document.querySelectorAll(".help-nav a").forEach((link) => link.addEventListener
 $("previewLogo").addEventListener("click", () => { const url = $("logoUrl").value.trim(); if (url && !/^https:\/\//i.test(url)) { previewLogo("", "Logo URL must use HTTPS."); return; } previewLogo(url, url ? "Logo URL ready to save." : "Default AM mark selected."); });
 $("defaultLogo").addEventListener("click", () => { $("logoUrl").value = ""; $("logoUpload").value = ""; previewLogo("", "Default AM mark selected."); });
 $("logoUpload").addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.size > 307200) { event.target.value = ""; previewLogo("", "Choose PNG, JPEG, GIF, or WebP no larger than 300 KB."); return; } const reader = new FileReader(); reader.addEventListener("load", () => { $("logoUrl").value = ""; previewLogo(String(reader.result), "Uploaded logo ready to save."); }); reader.readAsDataURL(file); });
+for (const kind of ["resource", "facility"]) {
+  $(`preview${kind[0].toUpperCase()}${kind.slice(1)}Icon`).addEventListener("click", () => {
+    const url = $(`${kind}IconUrl`).value.trim();
+    if (url && !/^https:\/\//i.test(url)) { $(`${kind}IconStatus`).textContent = "Icon URL must use HTTPS."; return; }
+    previewIcon(kind, url);
+  });
+  $(`default${kind[0].toUpperCase()}${kind.slice(1)}Icon`).addEventListener("click", () => { $(`${kind}IconUrl`).value = ""; $(`${kind}IconUpload`).value = ""; previewIcon(kind, ""); });
+  $(`${kind}IconUpload`).addEventListener("change", (event) => handleIconUpload(kind, event.target));
+}
 $("settingsCsvFile").addEventListener("change", inspectSelectedFile);
 $("resetAutomaticMappings").addEventListener("click", applyAutomaticMappings);
 $("settingsImportForm").addEventListener("submit", stageImport);

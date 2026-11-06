@@ -3,14 +3,15 @@ import { readImportSession, updateImportSessionRecord, updateImportSessionRecord
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js?v=20261106-11";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview } from "./map.js?v=20261106-12";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
 import { loadConfig } from "./config.js?v=20261106-3";
 import { applyPresentation } from "./presentation.js";
-import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-2";
+import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
+import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
 import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-2";
 
@@ -209,7 +210,7 @@ function renderResources() {
     return;
   }
   elements.resourceRows.innerHTML = records.map((record) => {
-    const symbol = resourceSymbolFor(record);
+    const symbol = resourceSymbolFor(record, state.config?.symbols?.resourceIconUrl || "");
     return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.assetType)} details">
       <td class="select-column"><input class="resource-select" type="checkbox" data-select-id="${escapeHtml(record.id)}" ${state.selectedResourceIds.has(record.id) ? "checked" : ""} aria-label="Select ${escapeHtml(record.assetType)} for bulk actions"></td>
@@ -229,10 +230,13 @@ function renderFacilities() {
   syncSortButtons("facilities", state.facilitySort);
   syncSortResetButton();
   elements.facilityCount.textContent = records.length;
-  elements.facilityRows.innerHTML = records.length ? records.map((record) => `
+  elements.facilityRows.innerHTML = records.length ? records.map((record) => {
+    const iconUrl = state.config?.symbols?.facilityIconUrl || FACILITY_SYMBOL_URL;
+    return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.name)} details">
-      <td><strong>${escapeHtml(record.name)}</strong></td><td>${escapeHtml(record.type)}</td><td>${escapeHtml(record.status)}</td><td>${sourceLabel(record)}</td>
-    </tr>`).join("") : '<tr><td colspan="4" class="empty-cell">No facilities are loaded.</td></tr>';
+      <td><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(iconUrl)}" alt=""><span><strong>${escapeHtml(record.name)}</strong></span></div></td><td>${escapeHtml(record.type)}</td><td>${escapeHtml(record.status)}</td><td>${sourceLabel(record)}</td>
+    </tr>`;
+  }).join("") : '<tr><td colspan="4" class="empty-cell">No facilities are loaded.</td></tr>';
 }
 
 function recordById(id) {

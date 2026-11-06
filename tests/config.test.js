@@ -6,11 +6,18 @@ function storage() {
   const values = new Map();
   return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key), values };
 }
-const base = { portalUrl: "https://example.com", featureServiceItemId: "a".repeat(32), webMapItemId: "b".repeat(32), serviceUrl: "https://example.com/FeatureServer", layers: { resources: 0, facilities: 1 }, oauth: { enabled: true, clientId: "public-id", mode: "redirect", redirectUrl: "https://example.com/app/" }, map: { basemap: "dark-gray-vector", center: { longitude: -120, latitude: 37 }, zoom: 9 }, import: { maxFileBytes: 1000000 } };
+const base = { portalUrl: "https://example.com", featureServiceItemId: "a".repeat(32), webMapItemId: "b".repeat(32), webMapUrl: "https://example.com/home/item.html?id=" + "b".repeat(32), serviceUrl: "https://example.com/FeatureServer", layers: { resources: 0, facilities: 1 }, oauth: { enabled: true, clientId: "public-id", mode: "redirect", redirectUrl: "https://example.com/app/" }, map: { basemap: "dark-gray-vector", center: { longitude: -120, latitude: 37 }, zoom: 9 }, import: { maxFileBytes: 1000000 }, symbols: { resourceIconUrl: "", facilityIconUrl: "" } };
 
 test("config merge preserves nested deployment values and applies safe overrides", () => {
   const merged = mergeConfig(base, { map: { zoom: 12 }, oauth: { clientId: "other-public-id" }, token: "no", clientSecret: "no" });
   assert.equal(merged.map.zoom, 12); assert.equal(merged.map.center.longitude, -120); assert.equal(merged.oauth.mode, "redirect"); assert.equal(merged.oauth.clientId, "other-public-id"); assert.equal("token" in merged, false); assert.equal("clientSecret" in merged, false);
+});
+
+test("config keeps Web Map URLs and browser-local icon overrides", () => {
+  const merged = mergeConfig(base, { webMapUrl: "https://example.com/maps/custom", symbols: { resourceIconUrl: "https://example.com/resource.svg", facilityIconUrl: "data:image/png;base64,AA==" } });
+  assert.equal(merged.webMapUrl, "https://example.com/maps/custom");
+  assert.equal(merged.symbols.resourceIconUrl, "https://example.com/resource.svg");
+  assert.match(merged.symbols.facilityIconUrl, /^data:image\/png/);
 });
 
 test("config overrides save, read, and clear using local storage", () => {

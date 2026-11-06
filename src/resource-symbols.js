@@ -17,9 +17,10 @@ export const RESOURCE_SYMBOLS = [
   { value: "other", label: "Other Resources", icon: "boxes-stacked", keywords: [] }
 ].map((definition) => ({ ...definition, url: iconUrl(definition.icon) }));
 
-export function resourceSymbolFor(record = {}) {
+export function resourceSymbolFor(record = {}, overrideUrl = "") {
   const text = `${record.category || ""} ${record.assetType || ""}`.toLowerCase();
-  return RESOURCE_SYMBOLS.find((definition) => definition.keywords.some((keyword) => text.includes(keyword))) || RESOURCE_SYMBOLS.at(-1);
+  const definition = RESOURCE_SYMBOLS.find((item) => item.keywords.some((keyword) => text.includes(keyword))) || RESOURCE_SYMBOLS.at(-1);
+  return overrideUrl ? { ...definition, url: overrideUrl } : definition;
 }
 
 export function resourceLabelingInfo(fieldName = "ResourceName") {
@@ -40,7 +41,8 @@ export function resourceLabelingInfo(fieldName = "ResourceName") {
   }];
 }
 
-export function resourceRenderer(fieldName) {
+export function resourceRenderer(fieldName, overrideUrl = "") {
+  if (overrideUrl) return { type: "simple", symbol: { type: "picture-marker", url: overrideUrl, width: "14pt", height: "14pt" } };
   const field = String(fieldName || "NIMS_Category").replaceAll('"', "");
   const clauses = RESOURCE_SYMBOLS.filter((definition) => definition.value !== "other").map((definition) => {
     const tests = definition.keywords.map((keyword) => `Includes(value, '${keyword.replaceAll("'", "\\'")}')`).join(" || ");

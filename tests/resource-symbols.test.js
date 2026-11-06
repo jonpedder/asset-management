@@ -19,6 +19,15 @@ test("resource renderer uses the category field and picture markers", () => {
   assert.ok(renderer.uniqueValueInfos.every((info) => info.symbol.type === "picture-marker" && info.symbol.url.endsWith(".svg") && info.symbol.width === "14pt"));
 });
 
+test("custom resource icon overrides category symbols", () => {
+  const url = "https://example.com/resource.svg";
+  assert.equal(resourceSymbolFor({ category: "Communications" }, url).url, url);
+  const renderer = resourceRenderer("NIMS_Category", url);
+  assert.equal(renderer.type, "simple");
+  assert.equal(renderer.symbol.url, url);
+  assert.equal(renderer.symbol.width, "14pt");
+});
+
 test("resource labels appear only at metropolitan scale and closer", () => {
   const [label] = resourceLabelingInfo("ResourceName");
   assert.match(label.labelExpressionInfo.expression, /ResourceName/);
