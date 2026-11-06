@@ -6,6 +6,8 @@ import { normalizeImportedRecord } from "./normalize.js";
 import { clearImportSession, readImportSession, saveImportSession } from "./import-session.js";
 import { RESOURCE_SYMBOLS } from "./resource-symbols.js?v=20261106-3";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
+import { initializeAuth } from "./auth.js";
+import { applyGeocodeCandidates, buildGeocodePlan } from "./import-geocoding.js?v=20261106-1";
 
 const $ = (id) => document.getElementById(id);
 const defaults = {
@@ -18,6 +20,7 @@ let draftIcons = { resourceIconUrl: "", facilityIconUrl: "" };
 let importInspection = null;
 let importMapping = {};
 let fileReadSequence = 0;
+let authState = { signedIn: false };
 
 function announce(message, tone = "success") {
   $("saveStatus").textContent = message;
@@ -162,19 +165,100 @@ async function inspectSelectedFile() {
     announce(error.message, "error");
   }
 }
-function stageImport(event) {
+function confirmGeocoding({ title, message, confirmLabel, cancelLabel }) {
+  const dialog = $("geocodeDialog");
+  $("geocodeDialogTitle").textContent = title;
+  $("geocodeDialogMessage").textContent = message;
+  $("geocodeConfirm").textContent = confirmLabel;
+  $("geocodeCancel").textContent = cancelLabel;
+  return new Promise((resolve) => {
+    const finish = (accepted) => {
+      $("geocodeConfirm").removeEventListener("click", accept);
+      $("geocodeCancel").removeEventListener("click", reject);
+      dialog.removeEventListener("cancel", reject);
+      dialog.close();
+      resolve(accepted);
+    };
+    const accept = () => finish(true);
+    const reject = (event) => { event?.preventDefault?.(); finish(false); };
+    $("geocodeConfirm").addEventListener("click", accept);
+    $("geocodeCancel").addEventListener("click", reject);
+    dialog.addEventListener("cancel", reject);
+    dialog.showModal();
+    $("geocodeCancel").focus();
+  });
+}
+async function geocodeImportedRecords(records, plan) {
+  if (!authState.signedIn) throw new Error("Sign in from the Inventory map before using credit-consuming geocoding, then return and stage the CSV again.");
+  const [locator, Portal] = await $arcgis.import(["@arcgis/core/rest/locator.js", "@arcgis/core/portal/Portal.js"]);
+  const portal = new Portal({ url: config.portalUrl, authMode: "immediate" });
+  await portal.load();
+  const services = portal.helperServices?.geocode;
+  const geocodeService = Array.isArray(services) ? services.find((service) => service.url) : services;
+  const url = geocodeService?.url;
+  if (!url) throw new Error("The signed-in portal does not advertise a geocoding service.");
+  const candidates = [];
+  for (let offset = 0; offset < plan.length; offset += 500) {
+    const batch = plan.slice(offset, offset + 500);
+    $("settingsImportFeedback").textContent = `Geocoding ${Math.min(offset + batch.length, plan.length)} of ${plan.length} unique locations…`;
+    const response = await locator.addressesToLocations(url, {
+      addresses: batch.map((request) => ({ OBJECTID: request.id, SingleLine: request.query })),
+      outFields: ["Match_addr", "Addr_type"],
+      outSpatialReference: { wkid: 4326 }
+    });
+    const locations = Array.isArray(response) ? response : response?.locations || [];
+    locations.forEach((candidate) => candidates.push({
+      resultId: candidate.attributes?.ResultID ?? candidate.attributes?.OBJECTID,
+      score: candidate.score ?? candidate.attributes?.Score,
+      location: candidate.location
+    }));
+  }
+  return applyGeocodeCandidates(records, plan, candidates);
+}
+async function stageImport(event) {
   event.preventDefault();
   const feedback = $("settingsImportFeedback");
+  const button = $("stageImport");
+  button.disabled = true;
   try {
     if (!$("settingsCsvFile").files?.[0] || !importInspection) throw new Error("Choose and inspect a CSV file before staging.");
     const { records, ignoredRows, headerRow } = mapCsvRecords(importInspection, currentMappingFromControls());
-    const payload = saveImportSession(records.map(normalizeImportedRecord), { ignoredRows, headerRow });
-    renderImportSession(payload, `${payload.records.length} rows loaded from header row ${headerRow}; ${ignoredRows} scaffolding or non-data rows ignored. The selected mapping was normalized and staged only for this tab/session.`);
-    announce(`Staged ${payload.records.length} inventory rows for the map.`);
+    let normalized = records.map(normalizeImportedRecord);
+    const plan = buildGeocodePlan(normalized);
+    let geocodeResult = null;
+    if (plan.length) {
+      const requested = await confirmGeocoding({
+        title: "Location information detected",
+        message: `${plan.reduce((sum, request) => sum + request.recordIndexes.length, 0)} imported resources contain usable location information. Do you want to geocode them and place them on the map?`,
+        confirmLabel: "Geocode locations",
+        cancelLabel: "Skip geocoding"
+      });
+      if (requested) {
+        const agreed = await confirmGeocoding({
+          title: "Geocoding uses ArcGIS credits",
+          message: `Warning: submitting ${plan.length} unique location${plan.length === 1 ? "" : "s"} to your organization's locator may consume ArcGIS credits. Continue only if you are authorized to use those credits.`,
+          confirmLabel: "I understand — use credits",
+          cancelLabel: "Cancel"
+        });
+        if (agreed) {
+          feedback.className = "feedback";
+          feedback.textContent = "Preparing signed-in geocoding…";
+          geocodeResult = await geocodeImportedRecords(normalized, plan);
+          normalized = geocodeResult.records;
+        }
+      }
+    }
+    const payload = saveImportSession(normalized, { ignoredRows, headerRow });
+    const locationMessage = geocodeResult ? ` ${geocodeResult.geocoded} resource${geocodeResult.geocoded === 1 ? "" : "s"} geocoded; ${geocodeResult.unresolved} unresolved.` : "";
+    renderImportSession(payload, `${payload.records.length} rows loaded from header row ${headerRow}; ${ignoredRows} scaffolding or non-data rows ignored.${locationMessage} The normalized records are staged only for this tab/session.`);
+    announce(`Staged ${payload.records.length} inventory rows for the map.${locationMessage}`);
+    if (geocodeResult) setTimeout(() => location.assign("./index.html"), 900);
   } catch (error) {
     feedback.className = "feedback error";
     feedback.textContent = error.message;
     announce(error.message, "error");
+  } finally {
+    if (importInspection) renderMappedPreview(); else button.disabled = true;
   }
 }
 function setTab(name, focus = false) {
@@ -257,4 +341,10 @@ $("save").addEventListener("click", () => { try { const overrides = values(); va
 $("reset").addEventListener("click", () => { clearConfigOverrides(); announce("Browser overrides removed. Reloading…"); setTimeout(() => location.reload(), 400); });
 $("downloadHelpPdf").addEventListener("click", downloadHelp);
 
-(async () => { try { populate(await loadConfig()); } catch (error) { announce(error.message, "error"); } })();
+(async () => {
+  try {
+    const loaded = await loadConfig();
+    populate(loaded);
+    try { authState = await initializeAuth(loaded); } catch { authState = { signedIn: false }; }
+  } catch (error) { announce(error.message, "error"); }
+})();

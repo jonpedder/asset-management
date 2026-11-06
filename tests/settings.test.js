@@ -18,6 +18,7 @@ test("settings page exposes import controls, tabs, help, and PDF action", async 
   assert.match(html, /id="resourceIconUrl"/); assert.match(html, /id="facilityIconUrl"/); assert.match(html, /id="resourceIconPreview"/); assert.match(html, /id="facilityIconPreview"/);
   assert.match(html, /id="webMapItemId"/); assert.match(html, /id="webMapUrl"/); assert.match(html, /Feature service REST URL/);
   assert.match(html, /Sorting, filtering, resizing, map symbols, and editing/); assert.match(html, /Reset sort order restores both lists/); assert.match(html, /Editing Information banner is collapsed by default/); assert.match(html, /row highlighted with a subtle amber glow/); assert.match(html, /return to the previous map viewpoint/); assert.match(html, /Available resources by type breakdown/);
+  assert.match(html, /id="geocodeDialog"/); assert.match(html, /id="geocodeConfirm"/); assert.match(html, /Geocoding requires a second confirmation warning/); assert.match(html, /js\.arcgis\.com\/5\.1/);
   assert.equal((html.match(/<\/body><\/html>/g) || []).length, 1);
 });
 
@@ -31,6 +32,7 @@ test("settings runtime inspects, maps, previews, normalizes, and stages the sele
   assert.match(source, /settingsCsvFile.*change.*inspectSelectedFile/);
   assert.match(source, /previewIcon\(kind/); assert.match(source, /handleIconUpload\(kind/); assert.match(source, /resourceIconUrl/); assert.match(source, /facilityIconUrl/);
   assert.match(source, /webMapItemId/); assert.match(source, /webMapUrl/);
+  assert.match(source, /function confirmGeocoding/); assert.match(source, /buildGeocodePlan\(normalized\)/); assert.match(source, /addressesToLocations/); assert.match(source, /Geocoding uses ArcGIS credits/); assert.match(source, /location\.assign\("\.\/index\.html"\)/);
 });
 
 test("main page has no import dialog and places a square settings cog at the far right", async () => {
