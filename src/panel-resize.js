@@ -2,7 +2,7 @@ const STORAGE_KEY = "assetManagement.inventoryPanelWidth";
 
 export function inventoryWidthBounds(workspaceWidth) {
   const width = Number(workspaceWidth) || 0;
-  return { min: 340, max: Math.max(340, width - 630) };
+  return { min: 340, max: Math.max(340, width - 350) };
 }
 
 export function clampInventoryWidth(width, workspaceWidth) {

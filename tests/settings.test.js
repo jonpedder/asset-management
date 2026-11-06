@@ -40,6 +40,7 @@ test("main page has no import dialog and places a square settings cog at the far
   assert.doesNotMatch(html, /class="status-strip"/); assert.match(html, /class="header-data-status"/);
   assert.match(html, /id="resourceTab"[\s\S]*id="resourceCount"[\s\S]*id="facilityTab"[\s\S]*id="facilityCount"/);
   assert.match(html, /id="bulkHeading">Bulk facility assignment[\s\S]*id="resetSortOrder"[\s\S]*Reset sort order/);
+  assert.match(html, /id="detailPanel"[^>]*aria-hidden="true"/); assert.match(html, /id="detailClose"/);
 });
 
 test("main runtime loads config, consumes staged imports, and applies presentation", async () => {
@@ -47,6 +48,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   assert.match(app, /import \{ readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
   assert.match(app, /elements\.resourceCount\.textContent = allRecords\.length/);
+  assert.match(app, /function openDetailPanel/); assert.match(app, /function closeDetailPanel/); assert.match(app, /detailClose\.addEventListener\("click", closeDetailPanel\)/);
   assert.match(app, /state\.config\?\.symbols\?\.resourceIconUrl/); assert.match(app, /state\.config\?\.symbols\?\.facilityIconUrl/);
   assert.match(app, /resetSortOrder\.addEventListener\("click"[\s\S]*resourceSort = \{ key: null[\s\S]*facilitySort = \{ key: null/);
   assert.equal((app.match(/<details class="editing-information">/g) || []).length, 2);

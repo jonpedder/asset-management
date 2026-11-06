@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
-  <link rel="stylesheet" href="./styles/app.css?v=20261106-11">
+  <link rel="stylesheet" href="./styles/app.css?v=20261106-12">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261106-18"></script>
+  <script type="module" src="./src/app.js?v=20261106-19"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -130,8 +130,8 @@
       <div id="mapMessage" class="map-message" role="status"><strong>Preparing map</strong><span>Loading ArcGIS Maps SDK for JavaScript 5.1…</span></div>
     </section>
 
-    <aside class="detail-panel panel" aria-labelledby="detailHeading">
-      <div class="panel-header"><div><p class="eyebrow">Selection</p><h2 id="detailHeading">Inventory detail</h2></div></div>
+    <aside id="detailPanel" class="detail-panel panel" aria-labelledby="detailHeading" aria-hidden="true">
+      <div class="panel-header"><div><p class="eyebrow">Selection</p><h2 id="detailHeading">Inventory detail</h2></div><button id="detailClose" class="detail-close" type="button" aria-label="Close inventory detail" title="Close inventory detail">×</button></div>
       <div id="detail" class="detail-scroll">
         <div class="empty-state"><span aria-hidden="true">⌖</span><strong>Select a record</strong><p>Choose a table row or imported map point to inspect source, quantity, and location provenance.</p></div>
       </div>

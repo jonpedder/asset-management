@@ -13,7 +13,7 @@ import { applyPresentation } from "./presentation.js";
 import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-3";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
-import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-2";
+import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-3";
 
 const state = {
   config: null,
@@ -49,7 +49,7 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "resourceCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
+  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "resourceCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detailPanel", "detailClose", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -243,9 +243,21 @@ function recordById(id) {
   return [...allResourceRecords(), ...currentFacilities()].find((record) => record.id === id);
 }
 
+function openDetailPanel() {
+  elements.detailPanel.classList.add("open");
+  elements.detailPanel.setAttribute("aria-hidden", "false");
+}
+function closeDetailPanel() {
+  cancelPointSelection();
+  clearPlacementPreview();
+  elements.detailPanel.classList.remove("open");
+  elements.detailPanel.setAttribute("aria-hidden", "true");
+  state.selectedId = null;
+}
 function showDetail(id) {
   const record = recordById(id);
   if (!record) return;
+  openDetailPanel();
   state.selectedId = id;
   const isFacility = Boolean(record.name && !record.assetType);
   const facilityAddress = isFacility ? extractFacilityAddress(record) : null;
@@ -308,6 +320,7 @@ function showAssetEditor() {
   cancelPointSelection(); clearPlacementPreview();
   const record = recordById(state.selectedId);
   if (!record || !record.assetType) return;
+  openDetailPanel();
   const values = editorValuesFromRecord(record);
   const isService = record.sourceType === "service";
   const gate = isService ? serviceEditGate({ signedIn: state.signedIn, layer: state.resourceLayer, record }) : record.sourceType === "import"
@@ -386,6 +399,7 @@ function showFacilityEditor(mode = "update") {
   cancelPointSelection(); clearPlacementPreview();
   const record = mode === "update" ? recordById(state.selectedId) : null;
   if (mode === "update" && (!record || record.assetType)) return;
+  openDetailPanel();
   const layer = state.facilityLayer;
   const bindings = inferFacilityBindings(layer?.fields || [], layer?.objectIdField);
   const values = facilityValuesFromRecord(record || {}, bindings);
@@ -769,6 +783,8 @@ function bindEvents() {
   elements.resourceTab.addEventListener("click", () => setInventoryType("resources"));
   elements.facilityTab.addEventListener("click", () => setInventoryType("facilities"));
   elements.addFacilityButton.addEventListener("click", () => showFacilityEditor("add"));
+  elements.detailClose.addEventListener("click", closeDetailPanel);
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && elements.detailPanel.classList.contains("open") && !elements.removeFacilityDialog.open) closeDetailPanel(); });
   elements.cancelRemoveFacility.addEventListener("click", () => { state.pendingDeleteFacilityId = null; elements.removeFacilityDialog.close(); });
   elements.confirmRemoveFacility.addEventListener("click", removeFacility);
   const activateRow = (event) => {
