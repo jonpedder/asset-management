@@ -39,5 +39,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   assert.match(app, /import \{ readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
   assert.match(app, /resetSortOrder\.addEventListener\("click"[\s\S]*resourceSort = \{ key: null[\s\S]*facilitySort = \{ key: null/);
+  assert.equal((app.match(/<details class="editing-information">/g) || []).length, 2);
+  assert.match(app, /<summary>Editing Information<\/summary>/); assert.doesNotMatch(app, /<details class="editing-information" open>/);
   assert.doesNotMatch(app, /importButton|importDialog|importForm|csvFile/);
 });

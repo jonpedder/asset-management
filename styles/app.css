@@ -321,6 +321,12 @@ td strong { color: var(--app-text); }
 .editor-heading, .editor-actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
 .editor-heading h2 { margin: .1rem 0 0; font-size: 1.05rem; }
 .edit-boundary, .form-status { margin: 0; padding: .6rem .7rem; border-left: 3px solid var(--app-blue); background: var(--app-bg); color: var(--app-muted); font-size: .69rem; line-height: 1.45; }
+.editing-information { margin: 0; border: 1px solid var(--app-border); background: var(--app-bg); }
+.editing-information summary { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .38rem .55rem; list-style: none; color: var(--app-accent); background: var(--app-panel-alt); font-size: .66rem; font-weight: 800; letter-spacing: .03em; cursor: pointer; }
+.editing-information summary::-webkit-details-marker { display: none; }
+.editing-information summary::after { content: "▶"; display: inline-block; color: var(--app-accent); line-height: 1; transform: rotate(0deg); transform-origin: center; transition: transform .15s ease; }
+.editing-information[open] summary::after { transform: rotate(90deg); }
+.editing-information .edit-boundary { border-left: 0; border-top: 1px solid var(--app-border); }
 .form-status:empty { display: none; }
 .form-status[data-tone="error"] { border-left-color: var(--app-red); color: var(--app-red); }
 .asset-edit-form fieldset, .additional-attributes { min-width: 0; margin: 0; padding: .7rem; border: 1px solid var(--app-border); background: var(--app-panel-alt); }

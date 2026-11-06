@@ -329,7 +329,7 @@ function showAssetEditor() {
   state.editGeometry = record.geometry || null; state.geocodePreview = null; state.editLocationMode = "current";
   elements.detail.innerHTML = `<form id="assetEditForm" class="asset-edit-form" novalidate>
     <div class="editor-heading"><div><p class="eyebrow">Editing</p><h2>${escapeHtml(record.assetType)}</h2></div><button type="button" class="btn btn-quiet" id="cancelAssetEdit">Cancel</button></div>
-    <p class="edit-boundary">${escapeHtml(gate.reason)} ${escapeHtml(editExplanation)}</p>
+    <details class="editing-information"><summary>Editing Information</summary><p class="edit-boundary">${escapeHtml(gate.reason)} ${escapeHtml(editExplanation)}</p></details>
     <fieldset><legend>Inventory attributes</legend><div class="form-grid">${EDIT_FIELDS.map(([key, label]) => normalizedFieldControl(key, label)).join("")}</div></fieldset>
     <fieldset><legend>Location</legend><div class="location-choices" role="radiogroup" aria-label="Location choice">
       <label><input type="radio" name="locationMode" value="current" checked> Retain current / selected geometry</label>
@@ -393,7 +393,7 @@ function showFacilityEditor(mode = "update") {
   state.facilityGeocodePreview = null;
   elements.detail.innerHTML = `<form id="facilityEditForm" class="asset-edit-form" novalidate>
     <div class="editor-heading"><div><p class="eyebrow">${mode === "add" ? "New facility" : "Editing facility"}</p><h2>${escapeHtml(record?.name || "Add facility")}</h2></div><button type="button" class="btn btn-quiet" id="cancelFacilityEdit">Cancel</button></div>
-    <p class="edit-boundary">Facility writes require sign-in, matching layer capability, editable fields, valid geometry, and an explicit Save facility action. Demo facilities are never persisted.</p>
+    <details class="editing-information"><summary>Editing Information</summary><p class="edit-boundary">Facility writes require sign-in, matching layer capability, editable fields, valid geometry, and an explicit Save facility action. Demo facilities are never persisted.</p></details>
     <fieldset><legend>Facility attributes</legend><div class="form-grid">${FACILITY_FIELDS.map((definition) => { const field = layer?.fields?.find((item) => item.name === bindings[definition.key]); return facilityFieldControl(definition, field, values[definition.key]); }).join("")}</div></fieldset>
     <fieldset><legend>Location</legend><div class="location-choices" role="radiogroup" aria-label="Facility location choice">
       ${mode === "update" ? '<label><input type="radio" name="facilityLocationMode" value="retain" checked> Retain existing geometry</label>' : ""}
