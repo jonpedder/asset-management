@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+test("browser entry modules are syntactically valid", () => {
+  for (const relative of ["../src/app.js", "../src/settings.js", "../src/map.js"]) execFileSync(process.execPath, ["--check", fileURLToPath(new URL(relative, import.meta.url))]);
+});
 
 test("runtime uses the required SDK loader and full-page OAuth redirect", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");

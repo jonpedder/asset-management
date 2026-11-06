@@ -397,5 +397,3 @@ $("downloadHelpPdf").addEventListener("click", downloadHelp);
     try { authState = await initializeAuth(loaded); } catch { authState = { signedIn: false }; }
   } catch (error) { announce(error.message, "error"); }
 })();
-); }
-})();
