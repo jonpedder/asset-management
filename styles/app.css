@@ -349,6 +349,8 @@ td strong { color: var(--app-text); }
 .facility-toolbar { display: flex; align-items: center; gap: .7rem; padding: .7rem .85rem; border-bottom: 1px solid var(--app-border); background: var(--app-panel-alt); }
 .facility-toolbar p { margin: 0; color: var(--app-muted); font-size: .66rem; line-height: 1.35; }
 .detail-actions, .facility-location-actions, .asset-location-actions, .dialog-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .7rem; }
+.detail-actions { align-items: flex-start; }
+.detail-actions .detail-edit-action { margin-top: 0; }
 .detail-actions .btn, .facility-location-actions .btn, .asset-location-actions .btn { flex: 1 1 118px; min-width: 118px; }
 .coordinate-fields { margin-top: .6rem; }
 .coordinate-fields input[readonly] { color: var(--app-muted); background: color-mix(in srgb,var(--app-bg) 75%,var(--app-panel-2)); }

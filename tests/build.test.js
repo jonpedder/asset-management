@@ -33,6 +33,8 @@ test("runtime uses the required SDK loader and full-page OAuth redirect", async 
   assert.match(html, /class="bulk-arrow"[^>]*aria-hidden="true">▶<\/span>/);
   assert.match(styles, /bulk-toggle\[aria-expanded="true"\] \.bulk-arrow\s*\{[^}]*rotate\(90deg\)/);
   assert.match(styles, /help-card summary::before\s*\{[^}]*content: "▶"/);
+  assert.match(styles, /\.detail-actions\s*\{[^}]*align-items:\s*flex-start/);
+  assert.match(styles, /\.detail-actions \.detail-edit-action\s*\{[^}]*margin-top:\s*0/);
 });
 
 test("build allowlist publishes settings and runtime modules without CSV", async () => {
