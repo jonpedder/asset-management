@@ -32,6 +32,7 @@ test("main page has no import dialog and places a square settings cog at the far
   assert.doesNotMatch(html, /id="importButton"/); assert.doesNotMatch(html, /id="importDialog"/); assert.doesNotMatch(html, /id="csvFile"/);
   assert.match(html, /id="signInButton"[\s\S]*id="signOutButton"[\s\S]*id="serviceStatus"[\s\S]*id="lastUpdated"[\s\S]*id="settingsLink"/); assert.match(html, /class="settings-cog"/); assert.match(html, /class="sr-only">Settings<\/span>/);
   assert.doesNotMatch(html, /class="status-strip"/); assert.match(html, /class="header-data-status"/);
+  assert.match(html, /id="resourceTab"[\s\S]*id="resourceCount"[\s\S]*id="facilityTab"[\s\S]*id="facilityCount"/);
   assert.match(html, /id="bulkHeading">Bulk facility assignment[\s\S]*id="resetSortOrder"[\s\S]*Reset sort order/);
 });
 
@@ -39,6 +40,7 @@ test("main runtime loads config, consumes staged imports, and applies presentati
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert.match(app, /import \{ readImportSession, updateImportSessionRecord, updateImportSessionRecords, validateImportSessionRecordUpdates \}/); assert.match(app, /state\.stagedImport = readImportSession\(\)/); assert.match(app, /consumeStagedImport\(\)/); assert.match(app, /assignLocations\(/);
   assert.match(app, /import \{ loadConfig \}/); assert.match(app, /import \{ applyPresentation \}/); assert.match(app, /await loadConfig\("\.\/config\/app\.json"\)/); assert.match(app, /applyPresentation\(state\.config\)/);
+  assert.match(app, /elements\.resourceCount\.textContent = allRecords\.length/);
   assert.match(app, /resetSortOrder\.addEventListener\("click"[\s\S]*resourceSort = \{ key: null[\s\S]*facilitySort = \{ key: null/);
   assert.equal((app.match(/<details class="editing-information">/g) || []).length, 2);
   assert.match(app, /<summary>Editing Information<\/summary>/); assert.doesNotMatch(app, /<details class="editing-information" open>/);

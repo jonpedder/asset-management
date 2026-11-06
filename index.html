@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
   <link rel="stylesheet" href="./styles/app.css?v=20261106-9">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261106-16"></script>
+  <script type="module" src="./src/app.js?v=20261106-17"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -55,7 +55,7 @@
         <span class="count-badge"><span id="inventoryCount">0</span> shown</span>
       </div>
       <div class="tabs" role="tablist" aria-label="Inventory type">
-        <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel"><span data-label="resourcesTab">Resources</span></button>
+        <button id="resourceTab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="resourcePanel"><span data-label="resourcesTab">Resources</span> <span id="resourceCount" class="count-inline">0</span></button>
         <button id="facilityTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="facilityPanel"><span data-label="facilitiesTab">Facilities</span> <span id="facilityCount" class="count-inline">0</span></button>
       </div>
       <section id="resourcePanel" role="tabpanel" aria-labelledby="resourceTab" class="inventory-content">

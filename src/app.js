@@ -48,7 +48,7 @@ const byId = (id) => document.getElementById(id);
 const elements = {};
 
 function cacheElements() {
-  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
+  ["workspace", "inventoryResizeHandle", "systemStatus", "authStatus", "serviceStatus", "sessionChip", "sessionDot", "sessionUser", "sessionState", "signInButton", "signOutButton", "demoButton", "resourceSearch", "sourceFilter", "facilityFilter", "cityFilter", "zipFilter", "clearFilters", "activeFilters", "bulkFacility", "bulkPreview", "bulkStatus", "applyBulkFacility", "bulkToggle", "bulkContent", "resetSortOrder", "selectedCount", "selectAllVisible", "resourceRows", "facilityRows", "addFacilityButton", "inventoryCount", "resourceCount", "facilityCount", "resourceTab", "facilityTab", "resourcePanel", "facilityPanel", "detail", "verifiedRecords", "verifiedQuantity", "importedRecords", "importedQuantity", "coverageMetric", "mockedToggle", "lastUpdated", "mapMessage", "toastRegion", "removeFacilityDialog", "removeFacilityMessage", "confirmRemoveFacility", "cancelRemoveFacility"].forEach((id) => { elements[id] = byId(id); });
 }
 
 function setStatus(message, tone = "neutral") {
@@ -190,6 +190,7 @@ function syncSortResetButton() {
 }
 function renderResources() {
   const allRecords = allResourceRecords();
+  elements.resourceCount.textContent = allRecords.length;
   state.selectedResourceIds = cleanSelectedIds(state.selectedResourceIds, allRecords);
   const filters = currentResourceFilters();
   const records = sortRows(filterResourceRecords(allRecords, filters), state.resourceSort, resourceSortAccessors);
