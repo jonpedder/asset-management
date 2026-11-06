@@ -1,6 +1,7 @@
 import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
 import { resourceLabelingInfo, resourceRenderer, resourceSymbolFor } from "./resource-symbols.js?v=20261106-2";
+import { FACILITY_SYMBOL_URL, facilityLabelingInfo, facilityRenderer } from "./facility-symbols.js?v=20261106-1";
 
 let Graphic;
 let GraphicsLayer;
@@ -154,6 +155,10 @@ export async function addServiceLayers(config) {
   resourceLayer.labelsVisible = true;
   resourceLayer.labelingInfo = resourceLabelingInfo(resourceBindings.assetType || "ResourceName");
   resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
+  const facilityBindings = inferFacilityBindings(facilityLayer.fields || [], facilityLayer.objectIdField);
+  facilityLayer.renderer = facilityRenderer();
+  facilityLayer.labelsVisible = true;
+  facilityLayer.labelingInfo = facilityLabelingInfo(facilityBindings.name || "SiteName");
   facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
   serviceLayers = [resourceLayer, facilityLayer];
   window.__esriLayers.Resources = resourceLayer;
@@ -164,6 +169,10 @@ export async function addServiceLayers(config) {
 function resourceGraphicSymbol(record) {
   const definition = resourceSymbolFor(record);
   return { type: "picture-marker", url: definition.url, width: "14pt", height: "14pt" };
+}
+
+function facilityGraphicSymbol() {
+  return { type: "picture-marker", url: FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" };
 }
 
 function graphicFor(record, symbol) {
@@ -209,7 +218,7 @@ export function displayImported(records) {
 export function displayDemo(resources, facilities) {
   demoLayer.removeAll();
   resources.forEach((record) => demoLayer.add(graphicFor(record, resourceGraphicSymbol(record))));
-  facilities.forEach((record) => demoLayer.add(graphicFor(record, symbols.demoFacility)));
+  facilities.forEach((record) => demoLayer.add(graphicFor(record, facilityGraphicSymbol())));
   view.goTo(demoLayer.graphics, { padding: 80 }).catch(() => {});
 }
 
