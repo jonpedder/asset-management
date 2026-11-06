@@ -70,6 +70,35 @@ function buildPdf(pages) {
   const xref = pdf.length; pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`; for (let id = 1; id < objects.length; id += 1) pdf += `${String(offsets[id]).padStart(10, "0")} 00000 n \n`;
   pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`; return new Blob([pdf], { type: "application/pdf" });
 }
+function buildSummaryPages(report, branding, generatedAt) {
+  const pages = []; let commands = []; let y = pageHeader(commands, report, branding, generatedAt, true);
+  const newPage = () => { pages.push(commands); commands = []; y = pageHeader(commands, report, branding, generatedAt, false); };
+  const table = (title, specs, records, sectionColor = "#2f7d32") => {
+    const minimum = 38 + Math.min(records.length, 2) * 15; if (y < minimum + 28) newPage();
+    commands.push(`${color(sectionColor)} rg 20 ${y - 16} 752 16 re f`, command(title.toUpperCase(), 24, y - 11, 7.2, "F2", "#ffffff")); y -= 16;
+    let x = 20; specs.forEach(([label,, width]) => { commands.push(`${color("#2f6491")} rg ${x} ${y - 17} ${width} 17 re f`, `${color("#9fb5c4")} RG .4 w ${x} ${y - 17} ${width} 17 re S`, command(label, x + 3, y - 11, 5.8, "F2", "#ffffff")); x += width; }); y -= 17;
+    records.forEach((record, rowIndex) => {
+      const lines = specs.map(([, key, width]) => wrap(record[key], width)); const rowHeight = Math.max(15, 5 + Math.max(...lines.map((item) => item.length)) * 6);
+      if (y - rowHeight < 28) { newPage(); commands.push(`${color(sectionColor)} rg 20 ${y - 16} 752 16 re f`, command(`${title.toUpperCase()} - CONTINUED`, 24, y - 11, 7.2, "F2", "#ffffff")); y -= 16; x = 20; specs.forEach(([label,, width]) => { commands.push(`${color("#2f6491")} rg ${x} ${y - 17} ${width} 17 re f`, command(label, x + 3, y - 11, 5.8, "F2", "#ffffff")); x += width; }); y -= 17; }
+      x = 20; specs.forEach(([, key, width], columnIndex) => { let fill = rowIndex % 2 ? "#edf3f8" : "#ffffff"; if (["status", "priority", "availability"].includes(key)) fill = cellFill(key, record[key], rowIndex); commands.push(`${color(fill)} rg ${x} ${y - rowHeight} ${width} ${rowHeight} re f`, `${color("#aebbc4")} RG .35 w ${x} ${y - rowHeight} ${width} ${rowHeight} re S`); lines[columnIndex].forEach((line, lineIndex) => commands.push(command(line, x + 3, y - 8 - lineIndex * 6, 5.5, key === specs[0][1] ? "F2" : "F1", "#071824"))); x += width; }); y -= rowHeight;
+    }); y -= 9;
+  };
+  const aggregateSpecs = [["Department / Category", "label", 190], ["Resource Types", "records", 80], ["Est. Qty", "quantity", 80], ["Available Qty", "availableQuantity", 90], ["Gap Records", "gaps", 85], ["Critical / High", "priority", 100], ["Availability Rate", "coverage", 127]];
+  table("Department Summary", aggregateSpecs, report.departments, "#2f7d32");
+  table("Category Summary", aggregateSpecs, report.categories, "#1469b8");
+  const breakdownSpecs = [["Status / Priority", "label", 260], ["Resource Records", "records", 140], ["Estimated Quantity", "quantity", 150], ["Share of Records", "share", 202]];
+  table("Status Summary", breakdownSpecs.map((item, index) => index === 0 ? [item[0], "status", item[2]] : item), report.statuses.map((item) => ({ ...item, status: item.label })), "#e95d00");
+  table("Procurement Priority Summary", breakdownSpecs.map((item, index) => index === 0 ? [item[0], "priority", item[2]] : item), report.priorities.map((item) => ({ ...item, priority: item.label })), "#c51f2b");
+  const gapSpecs = [["Asset Type", "assetType", 140], ["Department", "department", 100], ["Category", "category", 100], ["Est. Qty", "quantity", 60], ["Status", "status", 100], ["Gap Description", "gapDescription", 152], ["Priority", "priority", 100]];
+  table("Priority Gaps", gapSpecs, report.gaps.length ? report.gaps : [{ assetType: "No filtered gap records", department: "—", category: "—", quantity: "—", status: "—", gapDescription: "—", priority: "N/A" }], "#7a3e8e");
+  pages.push(commands); return pages;
+}
+
+export function buildGapSummaryReportPdf(report, generatedAt = new Date(), brandingInput = {}) {
+  const branding = { appName: ascii(brandingInput.appName || "Asset Management").slice(0, 60), subtitle: ascii(brandingInput.subtitle || "Inventory & Gap Status Summary").slice(0, 100) };
+  return buildPdf(buildSummaryPages(report, branding, generatedAt));
+}
+
 export function buildGapStatusReportPdf(report, generatedAt = new Date(), brandingInput = {}) {
   const branding = { appName: ascii(brandingInput.appName || "Asset Management").slice(0, 60), subtitle: ascii(brandingInput.subtitle || "Current Inventory & Gap Status").slice(0, 100), colors: { navy: validHex(brandingInput.colors?.navy, "#173b64") } };
   return buildPdf(buildPages(report, branding, generatedAt));

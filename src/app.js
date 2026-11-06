@@ -14,9 +14,9 @@ import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-4";
 import { FACILITY_SYMBOL_URL } from "./facility-symbols.js?v=20261106-2";
 import { sortRows } from "./table-sort.js?v=20261106-1";
 import { initializeInventoryResizer } from "./panel-resize.js?v=20261106-5";
-import { availableResourcesReport, inventoryGapStatusReport, isResourceAvailable, reportSummary, resourceFacilityName, resourcesAtFacilitiesReport } from "./report-data.js?v=20261106-2";
+import { availableResourcesReport, inventoryGapStatusReport, inventoryGapSummaryReport, isResourceAvailable, reportSummary, resourceFacilityName, resourcesAtFacilitiesReport } from "./report-data.js?v=20261106-3";
 import { buildInventoryReportPdf, loadPdfImage } from "./report-pdf.js?v=20261106-1";
-import { buildGapStatusReportPdf } from "./gap-report-pdf.js?v=20261106-1";
+import { buildGapStatusReportPdf, buildGapSummaryReportPdf } from "./gap-report-pdf.js?v=20261106-2";
 
 const state = {
   config: null,
@@ -706,15 +706,16 @@ async function exportSelectedReport() {
     let report; let fileName; let mapImage = null;
     if (kind === "summary") { report = reportSummary(resources, facilities, scope); fileName = "inventory-summary"; }
     else if (kind === "facility") { report = resourcesAtFacilitiesReport(resources, scope); fileName = "resources-at-facility"; }
+    else if (kind === "gap-summary") { report = inventoryGapSummaryReport(resources, scope); fileName = "inventory-gap-summary"; }
     else if (kind === "gap-status") { report = inventoryGapStatusReport(resources, scope); fileName = "inventory-gap-status"; }
     else {
       report = availableResourcesReport(resources, scope);
       fileName = "resources-available";
       mapImage = await captureResourceReportMap(report.records);
     }
-    const logo = kind === "gap-status" ? null : await loadPdfImage(state.config.branding?.logoUrl || "").catch(() => null);
+    const logo = kind.startsWith("gap-") ? null : await loadPdfImage(state.config.branding?.logoUrl || "").catch(() => null);
     const branding = { appName: state.config.branding?.appName, subtitle: state.config.branding?.subtitle, logo, mapImage, colors: state.config.branding?.colors };
-    const blob = kind === "gap-status" ? buildGapStatusReportPdf(report, new Date(), branding) : buildInventoryReportPdf(report, new Date(), branding);
+    const blob = kind === "gap-summary" ? buildGapSummaryReportPdf(report, new Date(), branding) : kind === "gap-status" ? buildGapStatusReportPdf(report, new Date(), branding) : buildInventoryReportPdf(report, new Date(), branding);
     downloadReport(blob, fileName);
     toast(`${report.title} downloaded.`, "success");
   } catch (error) { toast(error.message || "The report could not be generated.", "error"); }

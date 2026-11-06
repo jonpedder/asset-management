@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
   <link rel="stylesheet" href="./styles/app.css?v=20261106-19">
   <script type="module" src="https://js.arcgis.com/5.1/"></script>
-  <script type="module" src="./src/app.js?v=20261106-28"></script>
+  <script type="module" src="./src/app.js?v=20261106-29"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to operational workspace</a>
@@ -24,7 +24,7 @@
     </div>
     <div class="header-actions">
       <button class="btn" id="demoButton" type="button" hidden>Open invented demo</button>
-      <div class="header-report-group" aria-label="Reports"><label for="reportType">Reports</label><select id="reportType" disabled><option value="" selected>Select report</option><option value="summary">Summary report</option><option value="facility">Resources at a facility</option><option value="available">Resources available</option><option value="gap-status">Inventory &amp; gap status</option></select><button id="exportReportButton" class="btn btn-primary report-pdf-button" type="button" disabled>PDF</button></div>
+      <div class="header-report-group" aria-label="Reports"><label for="reportType">Reports</label><select id="reportType" disabled><option value="" selected>Select report</option><option value="summary">Summary report</option><option value="gap-summary">Inventory &amp; gap summary</option><option value="facility">Resources at a facility</option><option value="available">Resources available</option><option value="gap-status">Inventory &amp; gap status</option></select><button id="exportReportButton" class="btn btn-primary report-pdf-button" type="button" disabled>PDF</button></div>
       <div id="sessionChip" class="session-chip" role="status" aria-live="polite" hidden>
         <span id="sessionDot" class="session-dot" aria-hidden="true"></span>
         <span><strong id="sessionUser">Not signed in</strong><small id="sessionState">Authentication required</small></span>

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { availableResourcesReport, inventoryGapStatusReport, reportSummary, resourcesAtFacilitiesReport } from "../src/report-data.js";
+import { availableResourcesReport, inventoryGapStatusReport, inventoryGapSummaryReport, reportSummary, resourcesAtFacilitiesReport } from "../src/report-data.js";
 import { buildInventoryReportPdf } from "../src/report-pdf.js";
-import { buildGapStatusReportPdf } from "../src/gap-report-pdf.js";
+import { buildGapStatusReportPdf, buildGapSummaryReportPdf } from "../src/gap-report-pdf.js";
 
 const resources = [
   { assetType: "Generator", department: "Public Works", category: "Public Works", quantity: { raw: "3", estimate: 3 }, availability: "Available", status: "Have", locationName: "North EOC", eocRole: "Emergency power", operator: "No", priority: "N/A", unitCost: { raw: "$8,000-$25,000" } },
@@ -49,5 +49,23 @@ test("gap status report uses a landscape spreadsheet layout with grouped departm
   assert.match(pdf, /PUBLIC WORKS - 2 RESOURCES/);
   assert.match(pdf, /Gap - Need More/);
   assert.match(pdf, /INTERNAL WORKING REPORT/);
+  assert.match(pdf, /%%EOF$/);
+});
+
+test("gap summary report rolls the detailed inventory into executive summary tables", async () => {
+  const report = inventoryGapSummaryReport(resources, "current filters");
+  assert.equal(report.departments.length, 2);
+  assert.equal(report.categories.length, 2);
+  assert.equal(report.gaps.length, 1);
+  assert.equal(report.departments.find((row) => row.label === "Public Works").quantity, 8);
+  const blob = buildGapSummaryReportPdf(report, new Date("2026-01-01T00:00:00Z"), { appName: "County Assets" });
+  const pdf = await blob.text();
+  assert.match(pdf, /Inventory & Gap Status Summary/);
+  assert.match(pdf, /DEPARTMENT SUMMARY/);
+  assert.match(pdf, /CATEGORY SUMMARY/);
+  assert.match(pdf, /STATUS SUMMARY/);
+  assert.match(pdf, /PROCUREMENT PRIORITY SUMMARY/);
+  assert.match(pdf, /PRIORITY GAPS/);
+  assert.match(pdf, /Truck/);
   assert.match(pdf, /%%EOF$/);
 });

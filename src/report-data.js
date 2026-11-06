@@ -47,7 +47,7 @@ export function inventoryGapStatusReport(resources = [], scopeLabel = "Current l
   const sourceValue = (record, key, fallback = "—") => text(record?.[key] || record?.attributes?.[key], fallback);
   const rows = resources.map((record) => ({
     assetType: text(record.assetType), department: text(record.department || record.attributes?.OwningAgency, "Unassigned Department"), category: text(record.category, "Unclassified"),
-    quantity: text(record.quantity?.raw || record.quantity?.estimate, "0"), availability: text(record.availability || record.status, "Unknown"),
+    quantity: text(record.quantity?.raw || record.quantity?.estimate, "0"), quantityEstimate: Number(record.quantity?.estimate) || 0, availability: text(record.availability || record.status, "Unknown"),
     eocRole: sourceValue(record, "eocRole"), operator: sourceValue(record, "operator", "Not specified"), status: text(record.status || record.availability, "Unknown"),
     gapDescription: sourceValue(record, "gapDescription"), priority: sourceValue(record, "priority", "N/A"), unitCost: text(record.unitCost?.raw, "N/A"), notes: sourceValue(record, "notes")
   }));
@@ -58,6 +58,34 @@ export function inventoryGapStatusReport(resources = [], scopeLabel = "Current l
     metrics: { records: rows.length, quantity: resources.reduce((sum, record) => sum + quantity(record), 0), departments: groups.size, categories: new Set(rows.map((row) => row.category)).size, available: resources.filter(isResourceAvailable).reduce((sum, record) => sum + quantity(record), 0) },
     groups: [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([department, records]) => ({ department, records: records.sort((a, b) => a.assetType.localeCompare(b.assetType)) }))
   };
+}
+
+export function inventoryGapSummaryReport(resources = [], scopeLabel = "Current list filters") {
+  const detail = inventoryGapStatusReport(resources, scopeLabel);
+  const rows = detail.groups.flatMap((group) => group.records);
+  const isAvailable = (value) => /available|have|ready|in service/i.test(value || "");
+  const isGap = (row) => /gap|need|unavailable|out/i.test(row.status || row.availability) || (row.gapDescription && row.gapDescription !== "—");
+  const isPriority = (value) => /critical|high|p1|p2/i.test(value || "");
+  const aggregate = (key) => {
+    const groups = new Map();
+    rows.forEach((row) => {
+      const label = row[key] || "Unspecified";
+      const item = groups.get(label) || { label, records: 0, quantity: 0, availableQuantity: 0, gaps: 0, priority: 0 };
+      const qty = row.quantityEstimate || 0;
+      item.records += 1; item.quantity += qty;
+      if (isAvailable(row.availability || row.status)) item.availableQuantity += qty;
+      if (isGap(row)) item.gaps += 1;
+      if (isPriority(row.priority)) item.priority += 1;
+      groups.set(label, item);
+    });
+    return [...groups.values()].sort((a, b) => a.label.localeCompare(b.label)).map((item) => ({ ...item, coverage: item.quantity ? `${Math.round(item.availableQuantity / item.quantity * 100)}%` : "0%" }));
+  };
+  const statusMap = new Map();
+  rows.forEach((row) => { const label = row.status || row.availability || "Unknown"; const item = statusMap.get(label) || { label, records: 0, quantity: 0 }; item.records += 1; item.quantity += row.quantityEstimate || 0; statusMap.set(label, item); });
+  const priorityMap = new Map();
+  rows.forEach((row) => { const label = row.priority || "N/A"; const item = priorityMap.get(label) || { label, records: 0, quantity: 0 }; item.records += 1; item.quantity += row.quantityEstimate || 0; priorityMap.set(label, item); });
+  const withShare = (items) => items.map((item) => ({ ...item, share: rows.length ? `${Math.round(item.records / rows.length * 100)}%` : "0%" })).sort((a, b) => b.records - a.records || a.label.localeCompare(b.label));
+  return { title: "Inventory & Gap Status Summary", scopeLabel, metrics: detail.metrics, departments: aggregate("department"), categories: aggregate("category"), statuses: withShare([...statusMap.values()]), priorities: withShare([...priorityMap.values()]), gaps: rows.filter(isGap).sort((a, b) => Number(isPriority(b.priority)) - Number(isPriority(a.priority)) || a.department.localeCompare(b.department)).slice(0, 40) };
 }
 
 export function availableResourcesReport(resources = [], scopeLabel = "Current list filters") {
