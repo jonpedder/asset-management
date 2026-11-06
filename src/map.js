@@ -1,5 +1,6 @@
 import { inferFieldBindings } from "./asset-editing.js";
 import { inferFacilityBindings } from "./facility-editing.js";
+import { resourceRenderer } from "./resource-symbols.js?v=20261106-1";
 
 let Graphic;
 let GraphicsLayer;
@@ -148,6 +149,8 @@ export async function addServiceLayers(config) {
   facilityLayer.outFields = ["*"];
   resourceLayer.popupEnabled = true;
   facilityLayer.popupEnabled = true;
+  const resourceBindings = inferFieldBindings(resourceLayer.fields || []);
+  resourceLayer.renderer = resourceRenderer(resourceBindings.category || "NIMS_Category");
   resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
   facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
   serviceLayers = [resourceLayer, facilityLayer];

@@ -41,5 +41,8 @@ test("build allowlist publishes settings and runtime modules without CSV", async
   assert.match(build, /const runtimeFiles = \[/);
   assert.match(build, /"src\/import-session\.js"/);
   assert.match(build, /"src\/inventory-operations\.js"/);
+  assert.match(build, /"src\/resource-symbols\.js"/);
+  assert.match(build, /assets\/resource-icons\/tower-broadcast\.svg/);
+  assert.match(build, /FONT-AWESOME-LICENSE\.txt/);
   assert.doesNotMatch(build, /\.csv["']/i);
 });

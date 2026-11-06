@@ -11,7 +11,7 @@ Static operational resource and facility inventory with browser-local CSV stagin
 - Explicit bulk facility assignment for imported and authorized service assets, plus facility form editing, address preview, and one-shot map placement
 - Robust local CSV parsing and normalization; no CSV upload or persistence
 - Location hierarchy: current resource match, facility match, deterministic mocked county point
-- Distinct imported/mocked symbology and mocked-point visibility control
+- Category-based resource picture symbols shared by the Web Map and inventory list, plus distinct imported/mocked symbology and mocked-point visibility control
 - Invented demo data available only after the operational service cannot load
 - Settings & Help page with browser-local branding, labels, colors, connection diagnostics, and startup defaults
 - Dependency-free, branded Help & How-to PDF generation in the browser
@@ -38,6 +38,10 @@ The fallback center is configured to an approximate San Mateo County map center.
 ## Privacy and data safety
 
 Import begins in Settings. CSV text is parsed locally and discarded; normalized records and imported edits, including bulk facility assignment, remain in `sessionStorage` for the current tab/session. Imports are not bulk geocoded or uploaded. Signed-in operators can explicitly update resources and add, update, or remove facilities only when the loaded FeatureLayer reports the required capability and payload checks pass. Facility removal never removes or reassigns assets. All service writes use `FeatureLayer.applyEdits`; there is no tokenized REST write path. Address geocoding and service edits can consume services or credits and require permission.
+
+## Symbol sources
+
+The resource-category taxonomy is informed by the [NAPSG Foundation Symbol Library](https://www.napsgfoundation.org/symbology). The bundled SVG artwork uses modified [Font Awesome Free](https://fontawesome.com/) solid icons under CC BY 4.0; the complete license is published at `assets/resource-icons/FONT-AWESOME-LICENSE.txt`. The protected Red Cross emblem is not used; medical resources use a general first-aid kit symbol.
 
 ## Build and deployment
 

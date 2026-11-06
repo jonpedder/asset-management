@@ -123,6 +123,11 @@ td { padding: .62rem .65rem; border-bottom: 1px solid var(--app-border); color: 
 tbody tr { cursor: pointer; }
 tbody tr:hover, tbody tr:focus { background: var(--app-panel-2); box-shadow: inset 3px 0 var(--app-accent); }
 td strong { color: var(--app-text); }
+.resource-name { display: flex; align-items: center; gap: .5rem; min-width: 145px; }
+.resource-name > span { min-width: 0; }
+.resource-name strong, .resource-name small { display: block; }
+.resource-name small { margin-top: .12rem; color: var(--app-faint); font-size: .54rem; line-height: 1.2; }
+.resource-list-icon { width: 30px; height: 30px; flex: 0 0 30px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
 .mobile-meta { display: none; }
 .status { display: inline-flex; border: 1px solid currentColor; padding: .12rem .32rem; font-size: .56rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
 .status-available, .status-have { color: var(--status-available); }

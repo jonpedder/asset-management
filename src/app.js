@@ -10,6 +10,7 @@ import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
 import { escapeHtml, formatCurrencyRange, formatNumber } from "./format.js";
 import { loadConfig } from "./config.js?v=20261106-3";
 import { applyPresentation } from "./presentation.js";
+import { resourceSymbolFor } from "./resource-symbols.js?v=20261106-1";
 
 const state = {
   config: null,
@@ -175,16 +176,19 @@ function renderResources() {
     updateBulkControls();
     return;
   }
-  elements.resourceRows.innerHTML = records.map((record) => `
+  elements.resourceRows.innerHTML = records.map((record) => {
+    const symbol = resourceSymbolFor(record);
+    return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.assetType)} details">
       <td class="select-column"><input class="resource-select" type="checkbox" data-select-id="${escapeHtml(record.id)}" ${state.selectedResourceIds.has(record.id) ? "checked" : ""} aria-label="Select ${escapeHtml(record.assetType)} for bulk actions"></td>
-      <td><strong>${escapeHtml(record.assetType)}</strong><span class="mobile-meta">${escapeHtml(record.department || "No department")}</span></td>
+      <td><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(symbol.url)}" alt=""><span><strong>${escapeHtml(record.assetType)}</strong><small>${escapeHtml(symbol.label)}</small></span></div><span class="mobile-meta">${escapeHtml(record.department || "No department")}</span></td>
       <td>${escapeHtml(record.department || "—")}</td>
       <td>${escapeHtml(record.category || "—")}</td>
       <td>${escapeHtml(record.quantity?.raw || "—")}</td>
       <td><span class="status status-${escapeHtml((record.status || "unknown").toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(record.status || "Unknown")}</span></td>
       <td>${sourceLabel(record)}</td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
   updateBulkControls();
 }
 
