@@ -3,7 +3,7 @@ import { readImportSession, updateImportSessionRecord, updateImportSessionRecord
 import { additionalEditableFields, buildServiceUpdate, editorValuesFromRecord, extractFacilityAddress, inferFieldBindings, normalizedRecordPatch, serviceEditGate } from "./asset-editing.js";
 import { cleanSelectedIds, facilityFilterOptions, filterResourceRecords, planBulkFacilityAssignment, summarizeServiceUpdateResults } from "./inventory-operations.js";
 import { getAuthenticatedUser, initializeAuth, probeAnonymousAccess, signIn, signOut } from "./auth.js?v=20261106-3";
-import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView, captureResourceReportMap } from "./map.js?v=20261106-16";
+import { initializeMap, addServiceLayers, displayImported, displayDemo, clearDemo, setMockedVisible, focusRecord, startPointSelection, cancelPointSelection, setPlacementPreview, clearPlacementPreview, restoreListView, captureResourceReportMap, serviceResourceSymbol, serviceFacilitySymbolUrl } from "./map.js?v=20261106-17";
 import { queryAllFeatures, resourceFromFeature, facilityFromFeature } from "./service-data.js";
 import { FACILITY_FIELDS, additionalFacilityFields, buildFacilityFeature, deleteWarningModel, facilityEditGate, facilityValuesFromRecord, geometryCompatibility, inferFacilityBindings, selectConfidentAddressMatch } from "./facility-editing.js";
 import { DEMO_RESOURCES, DEMO_FACILITIES } from "./demo.js";
@@ -225,7 +225,7 @@ function renderResources() {
     return;
   }
   elements.resourceRows.innerHTML = records.map((record) => {
-    const symbol = resourceSymbolFor(record, configuredResourceIcons());
+    const symbol = serviceResourceSymbol(record) || resourceSymbolFor(record, configuredResourceIcons());
     return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.assetType)} details">
       <td class="select-column"><input class="resource-select" type="checkbox" data-select-id="${escapeHtml(record.id)}" ${state.selectedResourceIds.has(record.id) ? "checked" : ""} aria-label="Select ${escapeHtml(record.assetType)} for bulk actions"></td>
@@ -247,7 +247,7 @@ function renderFacilities() {
   syncSortResetButton();
   elements.facilityCount.textContent = records.length;
   elements.facilityRows.innerHTML = records.length ? records.map((record) => {
-    const iconUrl = state.config?.symbols?.facilityIconUrl || FACILITY_SYMBOL_URL;
+    const iconUrl = state.config?.symbols?.facilityIconUrl || serviceFacilitySymbolUrl() || FACILITY_SYMBOL_URL;
     return `
     <tr data-record-id="${escapeHtml(record.id)}" tabindex="0" aria-label="Open ${escapeHtml(record.name)} details">
       <td class="facility-card-cell"><div class="resource-card-line"><div class="resource-name"><img class="resource-list-icon" src="${escapeHtml(iconUrl)}" alt=""><span><strong>${escapeHtml(record.name)}</strong></span></div><span class="status status-${escapeHtml((record.status || "unknown").toLowerCase().replace(/\s+/g, "-"))}">${escapeHtml(record.status || "Unknown")}</span></div><div class="resource-card-meta"><span><b>Type</b> ${escapeHtml(record.type || "Facility")}</span><span class="resource-source">${sourceLabel(record)}</span></div></td>

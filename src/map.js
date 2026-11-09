@@ -181,11 +181,15 @@ export async function addServiceLayers(config) {
   let resourceLayer = findWebMapLayer("Resources", config.layers.resources);
   let facilityLayer = findWebMapLayer("Facilities", config.layers.facilities);
   const layersToAdd = [];
+  // Prefer the Feature Service item so the symbology stored on the service is applied; fall back to the bare URL.
+  const serviceSource = (layerIndex) => config.featureServiceItemId
+    ? { portalItem: { id: config.featureServiceItemId, portal: { url: config.portalUrl } }, layerId: Number(layerIndex) }
+    : { url: `${config.serviceUrl}/${layerIndex}` };
   if (!resourceLayer) {
     resourceLayer = new FeatureLayer({
       id: "resources",
       title: "Resources",
-      url: `${config.serviceUrl}/${config.layers.resources}`,
+      ...serviceSource(config.layers.resources),
       outFields: ["*"],
       popupEnabled: true
     });
@@ -195,7 +199,7 @@ export async function addServiceLayers(config) {
     facilityLayer = new FeatureLayer({
       id: "facilities",
       title: "Facilities",
-      url: `${config.serviceUrl}/${config.layers.facilities}`,
+      ...serviceSource(config.layers.facilities),
       outFields: ["*"],
       popupEnabled: true
     });
@@ -208,14 +212,21 @@ export async function addServiceLayers(config) {
   resourceLayer.popupEnabled = true;
   facilityLayer.popupEnabled = true;
   const resourceBindings = inferFieldBindings(resourceLayer.fields || []);
-  resourceLayer.renderer = resourceRenderer(resourceBindings.category || "NIMS_Category", resourceIconOverride);
+  // The symbology and labels stored on the service are authoritative. Code-built symbols are used only for an
+  // explicit browser-local icon override, or as a last resort when the service defines no symbology.
+  const hasServiceSymbology = (layer) => Boolean(layer.renderer && (layer.renderer.type !== "simple" || layer.renderer.symbol?.url));
+  if (hasIconChoice(resourceIconOverride) || !hasServiceSymbology(resourceLayer)) {
+    resourceLayer.renderer = resourceRenderer(resourceBindings.category || "NIMS_Category", resourceIconOverride);
+  }
   resourceLayer.labelsVisible = true;
-  resourceLayer.labelingInfo = resourceLabelingInfo(resourceBindings.assetType || "ResourceName");
+  if (!resourceLayer.labelingInfo?.length) resourceLayer.labelingInfo = resourceLabelingInfo(resourceBindings.assetType || "ResourceName");
   resourceLayer.popupTemplate = servicePopupTemplate(resourceLayer, "resource");
   const facilityBindings = inferFacilityBindings(facilityLayer.fields || [], facilityLayer.objectIdField);
-  facilityLayer.renderer = facilityRenderer(facilityIconOverride);
+  if (hasIconChoice(facilityIconOverride) || !hasServiceSymbology(facilityLayer)) {
+    facilityLayer.renderer = facilityRenderer(facilityIconOverride);
+  }
   facilityLayer.labelsVisible = true;
-  facilityLayer.labelingInfo = facilityLabelingInfo(facilityBindings.name || "SiteName");
+  if (!facilityLayer.labelingInfo?.length) facilityLayer.labelingInfo = facilityLabelingInfo(facilityBindings.name || "SiteName");
   facilityLayer.popupTemplate = servicePopupTemplate(facilityLayer, "facility");
   serviceLayers = [resourceLayer, facilityLayer];
   window.__esriLayers.Resources = resourceLayer;
@@ -223,13 +234,36 @@ export async function addServiceLayers(config) {
   return { resourceLayer, facilityLayer };
 }
 
+function hasIconChoice(override) {
+  if (!override) return false;
+  if (typeof override === "string") return true;
+  return Object.values(override).some((choice) => choice?.url || choice?.catalogValue);
+}
+
+// Icon the Feature Service itself assigns to a resource category (null when unmatched or locally overridden).
+export function serviceResourceSymbol(record = {}) {
+  const renderer = serviceLayers[0]?.renderer;
+  if (!renderer || hasIconChoice(resourceIconOverride)) return null;
+  const category = String(record.category ?? "").trim().toLowerCase();
+  if (!category) return null;
+  const match = (renderer.uniqueValueInfos || []).find((info) => String(info.value ?? "").trim().toLowerCase() === category);
+  const url = match?.symbol?.url;
+  return url ? { url, label: match.label || record.category } : null;
+}
+
+export function serviceFacilitySymbolUrl() {
+  const renderer = serviceLayers[1]?.renderer;
+  if (!renderer || hasIconChoice(facilityIconOverride)) return null;
+  return renderer.symbol?.url || null;
+}
+
 function resourceGraphicSymbol(record) {
-  const definition = resourceSymbolFor(record, resourceIconOverride);
-  return { type: "picture-marker", url: definition.url, width: "14pt", height: "14pt" };
+  const url = serviceResourceSymbol(record)?.url || resourceSymbolFor(record, resourceIconOverride).url;
+  return { type: "picture-marker", url, width: "14pt", height: "14pt" };
 }
 
 function facilityGraphicSymbol() {
-  return { type: "picture-marker", url: facilityIconOverride || FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" };
+  return { type: "picture-marker", url: facilityIconOverride || serviceFacilitySymbolUrl() || FACILITY_SYMBOL_URL, width: "14pt", height: "14pt" };
 }
 
 function graphicFor(record, symbol) {

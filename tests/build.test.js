@@ -71,3 +71,15 @@ test("build allowlist publishes settings and runtime modules without CSV", async
   assert.match(build, /FONT-AWESOME-LICENSE\.txt/);
   assert.doesNotMatch(build, /\.csv["']/i);
 });
+
+test("service symbology is authoritative and only locally overridden by explicit icon choices", async () => {
+  const map = await readFile(new URL("../src/map.js", import.meta.url), "utf8");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  assert.match(map, /hasIconChoice\(resourceIconOverride\) \|\| !hasServiceSymbology\(resourceLayer\)/);
+  assert.match(map, /hasIconChoice\(facilityIconOverride\) \|\| !hasServiceSymbology\(facilityLayer\)/);
+  assert.match(map, /if \(!resourceLayer\.labelingInfo\?\.length\)/);
+  assert.match(map, /portalItem: \{ id: config\.featureServiceItemId/);
+  assert.match(map, /export function serviceResourceSymbol/);
+  assert.match(app, /serviceResourceSymbol\(record\) \|\| resourceSymbolFor/);
+  assert.match(app, /serviceFacilitySymbolUrl\(\) \|\| FACILITY_SYMBOL_URL/);
+});
