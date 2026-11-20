@@ -52,8 +52,10 @@ button, a, input, select, textarea, summary, [tabindex] { outline-offset: 3px; }
 .brand strong, .brand small { display: block; }
 .brand strong { font-size: 1.05rem; letter-spacing: .025em; }
 .brand small { margin-top: .25rem; color: var(--app-muted); font-size: .7rem; }
+.brand .header-powered { color: var(--app-accent); font-weight: 800; letter-spacing: .045em; text-transform: uppercase; }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
-.header-report-group { min-height: 44px; display: flex; align-items: center; gap: .3rem; padding: .3rem .35rem; border: 1px solid rgba(242,169,0,.58); border-radius: 4px; background: rgba(7,24,36,.3); }
+.operational-nav, .settings-header-actions { display: flex; align-items: center; gap: .45rem; }
+.header-report-group { min-height: 44px; display: flex; align-items: center; gap: .3rem; padding: .3rem .35rem; border: 1px solid rgba(242,169,0,.58); border-radius: 2px; background: rgba(7,24,36,.3); box-shadow: inset 0 1px rgba(255,255,255,.04); }
 .header-report-group > label { margin: 0; color: var(--app-accent); font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .header-report-group > select { width: 152px; min-height: 25px; padding: 3px 22px 3px 6px; border: 1px solid rgba(242,169,0,.58); border-radius: 2px; background: var(--app-panel); color: var(--app-text); font-size: .64rem; }
 .report-pdf-button { min-width: 34px; min-height: 25px; padding: 4px 6px; font-size: .62rem; }
@@ -63,13 +65,15 @@ button, a, input, select, textarea, summary, [tabindex] { outline-offset: 3px; }
 .session-chip small { margin-top: .12rem; color: var(--app-green); font-size: .61rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .session-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--app-faint); }
 .session-dot.online { background: var(--app-green); box-shadow: 0 0 0 3px rgba(54,179,126,.14); }
-.btn { min-height: 38px; border: 1px solid var(--app-accent); border-radius: 3px; background: transparent; color: var(--app-accent); padding: .55rem .85rem; font-weight: 700; font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; text-decoration: none; }
+.btn { min-height: 38px; border: 1px solid var(--app-accent); border-radius: 2px; background: transparent; color: var(--app-accent); padding: .55rem .85rem; font-weight: 700; font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; text-decoration: none; box-shadow: inset 0 1px rgba(255,255,255,.04); }
+.app-header .nav-button { border-color: var(--app-accent); color: var(--app-accent); background: color-mix(in srgb,var(--app-panel) 82%,transparent); }
+.app-header .nav-button.nav-current, .app-header .nav-button[aria-current="page"] { background: var(--app-accent); color: #071824; border-color: var(--app-accent); box-shadow: 0 2px 8px rgba(0,0,0,.24); }
 .btn:hover:not(:disabled) { background: var(--app-panel-2); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-primary { background: var(--app-accent); color: #111; }
 .btn-primary:hover:not(:disabled) { background: var(--app-accent-strong); }
 .btn-quiet { border-color: var(--app-border); color: var(--app-muted); }
-.settings-cog-link { width: 38px; min-width: 38px; height: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--app-text); border: 1px solid var(--app-border); border-radius: 3px; }
+.settings-cog-link { width: 38px; min-width: 38px; height: 38px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--app-text); border: 1px solid var(--app-border); border-radius: 2px; }
 .settings-cog { width: 20px; height: 20px; flex: 0 0 auto; fill: currentColor; }
 .settings-cog-link:hover .settings-cog { color: var(--app-accent); }
 .header-data-status { min-height: 40px; display: grid; align-content: center; gap: .12rem; max-width: 360px; padding: .25rem .65rem; border-left: 1px solid var(--app-border); color: var(--app-muted); white-space: nowrap; }
@@ -268,7 +272,7 @@ td strong { color: var(--app-text); }
 /* Settings & Help */
 .brand-link, .nav-button { text-decoration: none; }
 .brand-link { color: inherit; }
-.brand-logo { width: 46px; height: 46px; object-fit: contain; padding: 3px; background: #fff; border: 1px solid var(--app-border); border-radius: 3px; }
+.brand-logo { width: 46px; height: 46px; object-fit: contain; padding: 3px; background: #fff; border: 1px solid var(--app-border); border-radius: 2px; }
 .settings-body { min-height: 100vh; overflow: auto; }
 .settings-page { width: min(1100px,calc(100% - 2rem)); margin: 0 auto; padding: 1.25rem 0 2rem; }
 .settings-title { margin-bottom: 1rem; }
