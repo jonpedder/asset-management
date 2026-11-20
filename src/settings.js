@@ -313,12 +313,13 @@ async function stageImport(event) {
   }
 }
 function setTab(name, focus = false) {
-  for (const key of ["settings", "configuration", "help"]) {
+  for (const key of ["settings", "configuration", "help", "video"]) {
     const active = key === name; const tab = $(`${key}Tab`);
     $(`${key}Panel`).hidden = !active; tab.classList.toggle("active", active); tab.setAttribute("aria-selected", String(active)); tab.tabIndex = active ? 0 : -1;
     if (active && focus) tab.focus();
   }
-  const help = name === "help"; $("save").hidden = help; $("reset").hidden = help;
+  const readOnly = name === "help" || name === "video"; $("save").hidden = readOnly; $("reset").hidden = readOnly;
+  history.replaceState(null, "", name === "video" ? "#demo-video-guide" : name === "help" ? "#help" : name === "configuration" ? "#configuration" : "#settings");
 }
 function populate(c) {
   config = c; applyPresentation(c);
@@ -368,7 +369,7 @@ async function downloadHelp() {
   finally { button.disabled = false; }
 }
 
-const tabs = ["settings", "configuration", "help"];
+const tabs = ["settings", "configuration", "help", "video"];
 for (const name of tabs) $(`${name}Tab`).addEventListener("click", () => setTab(name));
 $("settingsMain").querySelector("[role=tablist]").addEventListener("keydown", (event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const current = tabs.findIndex((name) => $(`${name}Tab`).getAttribute("aria-selected") === "true"); const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; setTab(tabs[next], true); });
 document.querySelectorAll(".help-nav a").forEach((link) => link.addEventListener("click", () => { const topic = document.querySelector(link.getAttribute("href")); if (topic) topic.open = true; }));
@@ -389,6 +390,9 @@ $("clearStagedImport").addEventListener("click", () => { clearImportSession(); $
 $("save").addEventListener("click", () => { try { const overrides = values(); validateConfig(mergeConfig(config, overrides)); saveConfigOverrides(overrides); announce("Settings saved. Reloading…"); setTimeout(() => location.reload(), 500); } catch (error) { announce(error.message, "error"); } });
 $("reset").addEventListener("click", () => { clearConfigOverrides(); announce("Browser overrides removed. Reloading…"); setTimeout(() => location.reload(), 400); });
 $("downloadHelpPdf").addEventListener("click", downloadHelp);
+const tabForHash = () => location.hash === "#demo-video-guide" ? "video" : location.hash === "#help" ? "help" : location.hash === "#configuration" ? "configuration" : "settings";
+setTab(tabForHash());
+window.addEventListener("hashchange", () => setTab(tabForHash()));
 
 (async () => {
   try {
